@@ -45,7 +45,7 @@ INSTALLED_APPS = [
 
 
 LOCAL_APPS = [
-    # 'authentication'
+    'authentication'
 ]
 
 THIRD_PARTY_APPS = [
@@ -154,13 +154,10 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-# LOGIN_URL = '/auth/login/'
+LOGIN_URL = '/auth/login/'
 
-# AUTH_USER_MODEL  = 'authentication.Users'
+AUTH_USER_MODEL  = 'authentication.Users'
 
-
-# If you want to allow all origins (Not recommended for production)
-CORS_ALLOW_ALL_ORIGINS = True
 
 # Allow credentials (if using authentication)
 CORS_ALLOW_CREDENTIALS = True
