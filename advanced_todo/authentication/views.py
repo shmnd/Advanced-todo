@@ -72,8 +72,8 @@ class LoginView(View):
         self.response_format = {"status_code": 101, "message": "", "error": ""}
 
     def get(self, request, *args, **kwargs):
-        # if request.user.is_authenticated and request.user.is_verified:
-        #     return redirect('home:dashboard')
+        if request.user.is_authenticated and request.user.is_verified:
+            return redirect('home:dashboard')
         return render(request, 'admin/authentication/login.html')
 
     def post(self, request, *args, **kwargs):
@@ -94,6 +94,7 @@ class LoginView(View):
                 user.save(update_fields=['otp', 'is_verified'])
 
                 request.session['user_id'] = user.id
+
         
                 try:
                     send_mail(
@@ -133,7 +134,7 @@ class OtpVerificationView(View):
 
     def post(self,request,*args, **kwargs):
         otp = request.POST.get('otp')
-        user_id = request.POST.get('user_id')
+        user_id = request.session.get('user_id')
 
         if not user_id:
             messages.error(request,'User not found, Please login again')

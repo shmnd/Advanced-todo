@@ -1,0 +1,147 @@
+{% extends 'admin/layouts/apps.html' %}
+{% load static %}
+{% comment %} {% load permission_tag %} {% endcomment %}
+
+{% block content %}
+<style>
+  .c-dashboardInfo {
+    margin-bottom: 15px;
+  }
+  .c-dashboardInfo .wrap {
+    background: #ffffff;
+    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 7px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 40px 25px 20px;
+    height: 100%;
+  }
+  .c-dashboardInfo__title,
+  .c-dashboardInfo__subInfo {
+    color: #6c6c6c;
+    font-size: 1.18em;
+  }
+  .c-dashboardInfo span {
+    display: block;
+  }
+  .c-dashboardInfo__count {
+    font-weight: 600;
+    font-size: 2.5em;
+    line-height: 64px;
+    color: #323c43;
+  }
+  .c-dashboardInfo .wrap:after {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    content: "";
+  }
+</style>
+
+<!--begin::Content wrapper-->
+<div class="d-flex flex-column flex-column-fluid">
+  <div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
+    <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+      <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
+        <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">Dashboard</h1>
+        <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
+          <li class="breadcrumb-item text-muted">
+            <a href="" class="text-muted text-hover-primary">Home</a>
+          </li>
+          <li class="breadcrumb-item">
+            <span class="bullet bg-gray-400 w-5px h-2px"></span>
+          </li>
+          <li class="breadcrumb-item text-muted">Dashboard</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {% comment %} {% if request.user|check_permission:'auth.view_dashboards' %} {% endcomment %}
+  <div id="root">
+    <div class="container pt-5">
+      <div class="row align-items-stretch">
+        
+        <!-- Total Inbox Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Inbox Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_inbox_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Important Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Important Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_important_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Urgent Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Urgent Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_urgent_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Daily Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Daily Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_daily_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Weekly Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Weekly Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_weekly_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Monthly Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Monthly Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_monthly_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Parking Lot Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Parking Lot Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_parking_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Recovery Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Recovery Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_recovery_tasks }}</span>
+          </div>
+        </div>
+
+        <!-- Total Active Tasks -->
+        <div class="c-dashboardInfo col-lg-3 col-md-6">
+          <div class="wrap">
+            <h4 class="c-dashboardInfo__title">Total Active Tasks</h4>
+            <span class="c-dashboardInfo__count">{{ total_tasks }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% comment %} {% endif %} {% endcomment %}
+</div>
+<!--end::Content wrapper-->
+{% endblock content %}
