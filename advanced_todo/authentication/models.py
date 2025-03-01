@@ -29,7 +29,7 @@ class Users(AbstractBaseUser, PermissionsMixin):
     is_staff    = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     objects     = CustomUserManager()
-    otp         = models.CharField(max_length=10,blank=True, null=True)
+    otp         = models.CharField(max_length=225,blank=True, null=True)
     otp_expiry  = models.DateTimeField(blank=True, null=True)
 
     USERNAME_FIELD = "email"  # Login via email

@@ -6,13 +6,12 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.conf import settings
 from advanced_todo_core.helpers.hash import Hash
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.core.mail import send_mail
 import random
 from django.urls import reverse
-
 
 class UserRegisterView(View):
     def __init__(self):
@@ -67,36 +66,35 @@ class UserRegisterView(View):
 
 
 
-class UserLoginView(View):
+class LoginView(View):
 
     def __init__(self):
         self.response_format = {"status_code": 101, "message": "", "error": ""}
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.is_verified:
-            pass
-            # return redirect('home:dashboard')
+        # if request.user.is_authenticated and request.user.is_verified:
+        #     return redirect('home:dashboard')
         return render(request, 'admin/authentication/login.html')
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
+    
         try:
-            email = request.POST.get("email")
-            password = request.POST.get("password")
-
-            user = authenticate(request, email=email, password=password)
-
-            EMAIL_HOST_USER = settings.EMAIL_HOST_USER
-
+            
+            email       = request.POST.get('email')
+            password    = request.POST.get('password')
+            user        = authenticate(email=email, password=password)
+                 
+            EMAIL_HOST_USER = str(settings.DEFAULT_FROM_EMAIL)
+            
             if user is not None:
-                otp = str(random.randint(100000,999999))
+                otp = random.randint(100000, 999999)
                 hash_otp = Hash.bcrypt({'key':str(otp)})
-                user.otp = hash_otp 
-                user.otp_expiry = timezone.now() + timedelta(minutes=3)
-                user.is_verified = False
-                user.save(update_fields=['otp','is_verified','otp_expiry'])
+                user.otp = hash_otp  
+                user.is_verified = False  
+                user.save(update_fields=['otp', 'is_verified'])
 
                 request.session['user_id'] = user.id
-
+        
                 try:
                     send_mail(
                         "Your OTP for Verification",
@@ -106,18 +104,25 @@ class UserLoginView(View):
                         fail_silently=False,
                     )
                 except Exception as e:
-                    ...
+                    print("Error sending OTP email:", str(e))
+                    # ...
+                otp_url = reverse("authentication:otp")
 
-                self.response_format['message'] = 'Otp send sucessfully'
-                self.response_format['status_code'] = 100
 
+                return JsonResponse({
+                    "status_code": 100,
+                    "message": "OTP sent successfully. Redirecting...",
+                    "redirect_url": otp_url  # ✅ Pass OTP URL
+                }, status=200)
+            
             else:
-                self.response_format['message'] = 'Invalid Email or Password'
-        except Exception as e:
-            self.response_format['message'] = "Something went wrong, Please try again later"
-            self.response_format['errors'] = str(e)
+                self.response_format['message'] = 'Invalid username or password'
 
-        return JsonResponse(self.response_format,status=200)
+        except Exception as e:
+            self.response_format['message'] = 'Something went wrong, Please try again later.'
+            self.response_format['error'] = str(e)
+
+        return JsonResponse(self.response_format, status=200)
     
 
 
@@ -126,7 +131,7 @@ class OtpVerificationView(View):
     def get(self,request,*args, **kwargs):
         return render(request,'admin/authentication/otp.html')
 
-    def get(self,request,*args, **kwargs):
+    def post(self,request,*args, **kwargs):
         otp = request.POST.get('otp')
         user_id = request.POST.get('user_id')
 

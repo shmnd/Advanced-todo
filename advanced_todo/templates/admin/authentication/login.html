@@ -9,7 +9,7 @@
 					<div class="w-lg-500px bg-body rounded shadow-sm p-10 p-lg-15 mx-auto">
 
 						<form class="form w-100" novalidate="novalidate" id="_sign_in_form" data-redirect-url="{% url 'authentication:otp' %}" >
-
+							{% csrf_token %}
 							<div class="fv-row mb-10">
 								<label class="form-label fs-6 fw-bolder text-dark">Email</label>
 								<input class="form-control form-control-lg form-control-solid" id="login-email" type="text" name="email" autocomplete="off" />
@@ -24,6 +24,7 @@
 									<i id="password-icon" class="fas fa-eye-slash"></i>
 								</a>
 							</div>
+							
 							<div class="text-center">
 								<button type="submit" id="_sign_in_submit" class="btn btn-lg btn-primary w-100 mb-5">
 									<span class="indicator-label">Continue</span>
@@ -45,7 +46,7 @@
 
 
 {% block script %}
-<link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+{% comment %} <link rel="stylesheet" href="{% static 'assets/css/style.css' %}"> {% endcomment %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <script>
