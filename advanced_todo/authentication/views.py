@@ -105,8 +105,8 @@ class LoginView(View):
                         fail_silently=False,
                     )
                 except Exception as e:
-                    print("Error sending OTP email:", str(e))
-                    # ...
+                    # print("Error sending OTP email:", str(e))
+                    ...
                 otp_url = reverse("authentication:otp")
 
 
@@ -117,7 +117,7 @@ class LoginView(View):
                 }, status=200)
             
             else:
-                self.response_format['message'] = 'Invalid username or password'
+                self.response_format['message'] = 'Invalid email or password'
 
         except Exception as e:
             self.response_format['message'] = 'Something went wrong, Please try again later.'

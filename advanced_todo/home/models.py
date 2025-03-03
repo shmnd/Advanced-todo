@@ -24,7 +24,7 @@ class Task(AbstractDateFieldMix):
     ]
 
     category = models.CharField(max_length=20, choices=TASK_CATEGORIES, default='inbox')
-    headline = models.CharField(_('Headline'), max_length=255, blank=True, null=True, unique=True)
+    headline = models.CharField(_('Headline'), max_length=255, blank=True, null=True)
     description = models.TextField(_('Description'), max_length=500, blank=True, null=True)
     is_active = models.BooleanField(_('Status'), default=True)
     is_task = models.BooleanField(_('Task'), default=True)
@@ -33,3 +33,11 @@ class Task(AbstractDateFieldMix):
 
     def __str__(self):
         return f"{self.get_category_display()}: {self.headline}"
+    
+    class Meta : 
+        verbose_name          = "Task"
+        verbose_name_plural   = "Tasks"
+
+        constraints = [
+            models.UniqueConstraint(fields=['headline', 'category'], name='unique_headline_per_category')
+        ]  # ✅ Added unique constraint
