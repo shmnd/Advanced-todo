@@ -95,12 +95,12 @@
         <thead>
             <tr>
                 <th>Time</th>
-                <th>Monday</th>
-                <th>Tuesday</th>
-                <th>Wednesday</th>
-                <th>Thursday</th>
-                <th>Friday</th>
-                <th>Saturday</th>
+                <th>Monday<br><span class="date-label" id="monday-date"></span></th>
+                <th>Tuesday<br><span class="date-label" id="tuesday-date"></span></th>
+                <th>Wednesday<br><span class="date-label" id="wednesday-date"></span></th>
+                <th>Thursday<br><span class="date-label" id="thursday-date"></span></th>
+                <th>Friday<br><span class="date-label" id="friday-date"></span></th>
+                <th>Saturday<br><span class="date-label" id="saturday-date"></span></th>
             </tr>
         </thead>
         <tbody id="schedule-body">
@@ -125,6 +125,24 @@
 </div>
 
 <script>
+
+    function generateWeeklyDates() {
+        const currentDate = new Date();
+        const currentDay = currentDate.getDay();
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(currentDate.getDate() - (currentDay === 0 ? 6 : currentDay - 1)); // Monday as start of the week
+    
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dateOptions = { month: 'short', day: 'numeric' };
+    
+        days.forEach((day, index) => {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + index);
+            document.getElementById(`${day}-date`).innerText = date.toLocaleDateString('en-US', dateOptions);
+        });
+    }
+    
+    generateWeeklyDates();
     
     function generateTimeSlots() {
         const tbody = document.getElementById('schedule-body');

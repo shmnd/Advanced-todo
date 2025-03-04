@@ -16,7 +16,6 @@ import json
 from django.utils.dateparse import parse_time
 from django.forms.models import model_to_dict
 
-
 # ---------------------------------------------------  Dashboard  -------------------------------------------------------------------
 class HomeView(View):
     def __init__(self):

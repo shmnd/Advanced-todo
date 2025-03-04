@@ -144,7 +144,7 @@ class OtpVerificationView(View):
             user.is_verified = True
             user.save()
             login(request,user)
-            return redirect('home:dashboard')
+            return redirect('home:startday')
         else:
             messages.error(request,'Invalid Otp , Please try again later')
             return render(request,'admin/authentication/otp.html')

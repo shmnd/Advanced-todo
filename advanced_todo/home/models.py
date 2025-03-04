@@ -46,7 +46,7 @@ class Task(AbstractDateFieldMix):
 
 
 # Task model for Weekly Schedule
-class WeeklyTask(models.Model):
+class WeeklyTask(AbstractDateFieldMix):
     DAYS_OF_WEEK = [
         ('monday', 'Monday'),
         ('tuesday', 'Tuesday'),
@@ -57,23 +57,24 @@ class WeeklyTask(models.Model):
     ]
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    day = models.CharField(max_length=10, choices=DAYS_OF_WEEK)
-    time = models.TimeField()
-    task = models.CharField(max_length=255)
+    day = models.CharField(max_length=10, choices=DAYS_OF_WEEK,blank=True, null=True)
+    date = models.DateField(blank=True, null=True)  
+    time = models.TimeField(blank=True, null=True)
+    task = models.CharField(max_length=255,blank=True, null=True)
 
     def __str__(self):
         return f"{self.day.capitalize()} - {self.time} - {self.task}"
 
 # Task model for Start and End Day To-Do Lists
-class ToDoTask(models.Model):
+class ToDoTask(AbstractDateFieldMix):
     TASK_TYPE = [
         ('start', 'Start Day'),
         ('end', 'End Day'),
     ]
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    task_type = models.CharField(max_length=5, choices=TASK_TYPE)
-    task = models.CharField(max_length=255)
+    task_type = models.CharField(max_length=5, choices=TASK_TYPE,blank=True, null=True)
+    task = models.CharField(max_length=255,blank=True, null=True)
 
     def __str__(self):
         return f"{self.get_task_type_display()} - {self.task}"
