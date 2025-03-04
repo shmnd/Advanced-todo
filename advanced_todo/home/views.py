@@ -336,3 +336,770 @@ class DestroyUrgentTaskRecordsView(View):
             self.response_format['error'] = str(e)
         return JsonResponse(self.response_format, status=200)
 
+
+# ----------------------------------------------------------------- DAILY TASK ------------------------------------------------------------------
+
+
+class DailyTaskView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : []}
+        self.template = 'admin/home/daily-task/daily-datatable.html'    
+        self.context['title'] = 'Daily Task'
+        self.generateBreadcrumbs()
+        
+    def get(self, request, *args, **kwargs):
+        data_exists = self.check_data_exists()
+        self.context['data_exists'] = data_exists
+        return render(request, self.template, context=self.context)
+
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Daily Task", "route" : '','active' : True})
+        
+    def check_data_exists(self):
+        data_exists = Task.objects.filter(category='daily').exists()
+        return data_exists
+    
+
+class LoadDailyTaskDatatable(BaseDatatableView):
+    model = Task
+    order_columns = ['id','headline','is_active'] 
+    
+    def get_initial_queryset(self):
+
+        filter_value = self.request.POST.get('columns[3][search][value]', None)
+        if filter_value == '1':
+            return self.model.objects.filter(category='daily', is_active=True).order_by('-id')
+        elif filter_value == '2':
+            return self.model.objects.filter(category='daily', is_active=False).order_by('-id')
+        else:
+       
+            return Task.objects.filter(category='daily').order_by('-id')
+    
+    def filter_queryset(self, qs):
+        search = self.request.POST.get('search[value]', None)
+        if search:
+            qs = qs.filter(Q(headline__istartswith=search))
+        return qs
+    
+    def prepare_results(self, qs):
+        json_data = []
+        for item in qs:
+            json_data.append({
+                'id'            : escape(item.id),
+                'encrypt_id'    : escape(URLEncryptionDecryption.enc(item.id)),
+                'headline'      : escape(item.headline),
+                'is_active'     : escape(item.is_active),
+            })
+        return json_data
+
+
+class ActiveInactiveDailyTasks(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code":101, "message":"", "error":""}
+        
+    def post(self, request, **kwargs):
+        try:
+            instance_id = request.POST.get('id', None)
+            instance = Task.objects.get(id = instance_id)
+            if instance_id:
+                instance.is_active = not instance.is_active
+                instance.save()
+                self.response_format['status_code']=200
+                self.response_format['message']= 'Success'
+                
+        except Exception as es:
+            self.response_format['message']='error'
+            self.response_format['error'] = str(es)
+        return JsonResponse(self.response_format, status=200)
+    
+
+class DailyTaskCreateOrUpdateView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : [],}
+        self.action = "Create"
+        self.context['title'] = 'Daily Task'
+        self.template = 'admin/home/daily-task/daily-task-create-or-update.html'      
+
+
+    def get(self, request, *args, **kwargs):
+        id = URLEncryptionDecryption.dec(kwargs.pop('id', None))
+        if id:
+            self.action = "Update"
+            self.context['instance'] = get_object_or_404(Task, id=id)
+        
+        self.generateBreadcrumbs()
+        return render(request, self.template, context=self.context)
+    
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Daily Task", "route" : reverse('home:daily.task.view.index') ,'active' : False})
+        self.context['breadcrumbs'].append({"name" : "{} Daily Task ".format(self.action), "route" : '','active' : True})
+
+    def post(self, request, *args, **kwargs):
+        instance_id = request.POST.get('instance_id', None)
+        form_data = request.POST
+
+        try:
+            if instance_id:
+                self.action = 'Updated'
+                instance = get_object_or_404(Task, id=instance_id)
+                instance.updated_by = request.user
+            else:
+                instance = Task()
+
+            instance.headline     = request.POST.get('headline',None)
+            instance.description  = request.POST.get('description',None)
+            instance.category = 'daily'
+
+            instance.created_by   = request.user
+            instance.save()
+            
+            messages.success(request, f"Data Successfully: {self.action}")
+            
+        except Exception as e:
+            error_message = f"Something went wrong. {str(e)}"
+            messages.error(request, error_message)
+            self.context['instance'] = form_data
+            self.context['err_message'] = error_message
+            self.context['instance_id'] = instance_id
+            
+            if instance_id is not None and instance_id != "":
+                return render(request, self.template, context=self.context)
+            return render(request, self.template, context=self.context)
+        return redirect('home:daily.task.view.index')
+
+
+@method_decorator(login_required, name='dispatch')
+class DestroyDailyTaskRecordsView(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code": 101, "message": "", "error": ""}
+
+    def post(self, request, *args, **kwargs):
+        try:
+            instance_id = request.POST.getlist('ids[]')
+            if instance_id:
+                Task.objects.filter(id__in=instance_id).delete()
+                self.response_format['status_code'] = 200
+                self.response_format['message'] = 'Success'
+        except Exception as e:
+            self.response_format['message'] = 'error'
+            self.response_format['error'] = str(e)
+        return JsonResponse(self.response_format, status=200)
+    
+
+
+# ----------------------------------------------------------------- Weekly TASK ------------------------------------------------------------------
+
+
+class WeeklyTaskView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : []}
+        self.template = 'admin/home/weekly-task/weekly-datatable.html'    
+        self.context['title'] = 'Weekly Task'
+        self.generateBreadcrumbs()
+        
+    def get(self, request, *args, **kwargs):
+        data_exists = self.check_data_exists()
+        self.context['data_exists'] = data_exists
+        return render(request, self.template, context=self.context)
+
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Weekly Task", "route" : '','active' : True})
+        
+    def check_data_exists(self):
+        data_exists = Task.objects.filter(category='weekly').exists()
+        return data_exists
+    
+
+class LoadWeeklyTaskDatatable(BaseDatatableView):
+    model = Task
+    order_columns = ['id','headline','is_active'] 
+    
+    def get_initial_queryset(self):
+
+        filter_value = self.request.POST.get('columns[3][search][value]', None)
+        if filter_value == '1':
+            return self.model.objects.filter(category='weekly', is_active=True).order_by('-id')
+        elif filter_value == '2':
+            return self.model.objects.filter(category='weekly', is_active=False).order_by('-id')
+        else:
+       
+            return Task.objects.filter(category='weekly').order_by('-id')
+    
+    def filter_queryset(self, qs):
+        search = self.request.POST.get('search[value]', None)
+        if search:
+            qs = qs.filter(Q(headline__istartswith=search))
+        return qs
+    
+    def prepare_results(self, qs):
+        json_data = []
+        for item in qs:
+            json_data.append({
+                'id'            : escape(item.id),
+                'encrypt_id'    : escape(URLEncryptionDecryption.enc(item.id)),
+                'headline'      : escape(item.headline),
+                'is_active'     : escape(item.is_active),
+            })
+        return json_data
+
+
+class ActiveInactiveWeeklyTasks(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code":101, "message":"", "error":""}
+        
+    def post(self, request, **kwargs):
+        try:
+            instance_id = request.POST.get('id', None)
+            instance = Task.objects.get(id = instance_id)
+            if instance_id:
+                instance.is_active = not instance.is_active
+                instance.save()
+                self.response_format['status_code']=200
+                self.response_format['message']= 'Success'
+                
+        except Exception as es:
+            self.response_format['message']='error'
+            self.response_format['error'] = str(es)
+        return JsonResponse(self.response_format, status=200)
+    
+
+class WeeklyTaskCreateOrUpdateView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : [],}
+        self.action = "Create"
+        self.context['title'] = 'Weekly Task'
+        self.template = 'admin/home/weekly-task/weekly-task-create-or-update.html'      
+
+
+    def get(self, request, *args, **kwargs):
+        id = URLEncryptionDecryption.dec(kwargs.pop('id', None))
+        if id:
+            self.action = "Update"
+            self.context['instance'] = get_object_or_404(Task, id=id)
+        
+        self.generateBreadcrumbs()
+        return render(request, self.template, context=self.context)
+    
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Weekly Task", "route" : reverse('home:weekly.task.view.index') ,'active' : False})
+        self.context['breadcrumbs'].append({"name" : "{} Weekly Task ".format(self.action), "route" : '','active' : True})
+
+    def post(self, request, *args, **kwargs):
+        instance_id = request.POST.get('instance_id', None)
+        form_data = request.POST
+
+        try:
+            if instance_id:
+                self.action = 'Updated'
+                instance = get_object_or_404(Task, id=instance_id)
+                instance.updated_by = request.user
+            else:
+                instance = Task()
+
+            instance.headline     = request.POST.get('headline',None)
+            instance.description  = request.POST.get('description',None)
+            instance.category = 'weekly'
+
+            instance.created_by   = request.user
+            instance.save()
+            
+            messages.success(request, f"Data Successfully: {self.action}")
+            
+        except Exception as e:
+            error_message = f"Something went wrong. {str(e)}"
+            messages.error(request, error_message)
+            self.context['instance'] = form_data
+            self.context['err_message'] = error_message
+            self.context['instance_id'] = instance_id
+            
+            if instance_id is not None and instance_id != "":
+                return render(request, self.template, context=self.context)
+            return render(request, self.template, context=self.context)
+        return redirect('home:weekly.task.view.index')
+
+
+@method_decorator(login_required, name='dispatch')
+class DestroyWeeklyTaskRecordsView(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code": 101, "message": "", "error": ""}
+
+    def post(self, request, *args, **kwargs):
+        try:
+            instance_id = request.POST.getlist('ids[]')
+            if instance_id:
+                Task.objects.filter(id__in=instance_id).delete()
+                self.response_format['status_code'] = 200
+                self.response_format['message'] = 'Success'
+        except Exception as e:
+            self.response_format['message'] = 'error'
+            self.response_format['error'] = str(e)
+        return JsonResponse(self.response_format, status=200)
+    
+
+# ----------------------------------------------------------------- Monthly TASK ------------------------------------------------------------------
+
+
+class MonthlyTaskView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : []}
+        self.template = 'admin/home/monthly-task/monthly-datatable.html'    
+        self.context['title'] = 'monthly Task'
+        self.generateBreadcrumbs()
+        
+    def get(self, request, *args, **kwargs):
+        data_exists = self.check_data_exists()
+        self.context['data_exists'] = data_exists
+        return render(request, self.template, context=self.context)
+
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Monthly Task", "route" : '','active' : True})
+        
+    def check_data_exists(self):
+        data_exists = Task.objects.filter(category='monthly').exists()
+        return data_exists
+    
+
+class LoadMonthlyTaskDatatable(BaseDatatableView):
+    model = Task
+    order_columns = ['id','headline','is_active'] 
+    
+    def get_initial_queryset(self):
+
+        filter_value = self.request.POST.get('columns[3][search][value]', None)
+        if filter_value == '1':
+            return self.model.objects.filter(category='monthly', is_active=True).order_by('-id')
+        elif filter_value == '2':
+            return self.model.objects.filter(category='monthly', is_active=False).order_by('-id')
+        else:
+       
+            return Task.objects.filter(category='monthly').order_by('-id')
+    
+    def filter_queryset(self, qs):
+        search = self.request.POST.get('search[value]', None)
+        if search:
+            qs = qs.filter(Q(headline__istartswith=search))
+        return qs
+    
+    def prepare_results(self, qs):
+        json_data = []
+        for item in qs:
+            json_data.append({
+                'id'            : escape(item.id),
+                'encrypt_id'    : escape(URLEncryptionDecryption.enc(item.id)),
+                'headline'      : escape(item.headline),
+                'is_active'     : escape(item.is_active),
+            })
+        return json_data
+
+
+class ActiveInactiveMonthlyTasks(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code":101, "message":"", "error":""}
+        
+    def post(self, request, **kwargs):
+        try:
+            instance_id = request.POST.get('id', None)
+            instance = Task.objects.get(id = instance_id)
+            if instance_id:
+                instance.is_active = not instance.is_active
+                instance.save()
+                self.response_format['status_code']=200
+                self.response_format['message']= 'Success'
+                
+        except Exception as es:
+            self.response_format['message']='error'
+            self.response_format['error'] = str(es)
+        return JsonResponse(self.response_format, status=200)
+    
+
+class MonthlyTaskCreateOrUpdateView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : [],}
+        self.action = "Create"
+        self.context['title'] = 'Monthly Task'
+        self.template = 'admin/home/monthly-task/monthly-task-create-or-update.html'      
+
+
+    def get(self, request, *args, **kwargs):
+        id = URLEncryptionDecryption.dec(kwargs.pop('id', None))
+        if id:
+            self.action = "Update"
+            self.context['instance'] = get_object_or_404(Task, id=id)
+        
+        self.generateBreadcrumbs()
+        return render(request, self.template, context=self.context)
+    
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Monthly Task", "route" : reverse('home:monthly.task.view.index') ,'active' : False})
+        self.context['breadcrumbs'].append({"name" : "{} Monthly Task ".format(self.action), "route" : '','active' : True})
+
+    def post(self, request, *args, **kwargs):
+        instance_id = request.POST.get('instance_id', None)
+        form_data = request.POST
+
+        try:
+            if instance_id:
+                self.action = 'Updated'
+                instance = get_object_or_404(Task, id=instance_id)
+                instance.updated_by = request.user
+            else:
+                instance = Task()
+
+            instance.headline     = request.POST.get('headline',None)
+            instance.description  = request.POST.get('description',None)
+            instance.category = 'monthly'
+
+            instance.created_by   = request.user
+            instance.save()
+            
+            messages.success(request, f"Data Successfully: {self.action}")
+            
+        except Exception as e:
+            error_message = f"Something went wrong. {str(e)}"
+            messages.error(request, error_message)
+            self.context['instance'] = form_data
+            self.context['err_message'] = error_message
+            self.context['instance_id'] = instance_id
+            
+            if instance_id is not None and instance_id != "":
+                return render(request, self.template, context=self.context)
+            return render(request, self.template, context=self.context)
+        return redirect('home:monthly.task.view.index')
+
+
+@method_decorator(login_required, name='dispatch')
+class DestroyMonthlyTaskRecordsView(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code": 101, "message": "", "error": ""}
+
+    def post(self, request, *args, **kwargs):
+        try:
+            instance_id = request.POST.getlist('ids[]')
+            if instance_id:
+                Task.objects.filter(id__in=instance_id).delete()
+                self.response_format['status_code'] = 200
+                self.response_format['message'] = 'Success'
+        except Exception as e:
+            self.response_format['message'] = 'error'
+            self.response_format['error'] = str(e)
+        return JsonResponse(self.response_format, status=200)
+    
+
+
+# ----------------------------------------------------------------- Parkinglot TASK ------------------------------------------------------------------
+
+
+class ParkingLotTaskView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : []}
+        self.template = 'admin/home/parkinglot-task/parkinglot-datatable.html'    
+        self.context['title'] = 'Parking Lot Task'
+        self.generateBreadcrumbs()
+        
+    def get(self, request, *args, **kwargs):
+        data_exists = self.check_data_exists()
+        self.context['data_exists'] = data_exists
+        return render(request, self.template, context=self.context)
+
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Parking Lot Task", "route" : '','active' : True})
+        
+    def check_data_exists(self):
+        data_exists = Task.objects.filter(category='parkinglot').exists()
+        return data_exists
+    
+
+class LoadParkingLotTaskDatatable(BaseDatatableView):
+    model = Task
+    order_columns = ['id','headline','is_active'] 
+    
+    def get_initial_queryset(self):
+
+        filter_value = self.request.POST.get('columns[3][search][value]', None)
+        if filter_value == '1':
+            return self.model.objects.filter(category='parkinglot', is_active=True).order_by('-id')
+        elif filter_value == '2':
+            return self.model.objects.filter(category='parkinglot', is_active=False).order_by('-id')
+        else:
+       
+            return Task.objects.filter(category='parkinglot').order_by('-id')
+    
+    def filter_queryset(self, qs):
+        search = self.request.POST.get('search[value]', None)
+        if search:
+            qs = qs.filter(Q(headline__istartswith=search))
+        return qs
+    
+    def prepare_results(self, qs):
+        json_data = []
+        for item in qs:
+            json_data.append({
+                'id'            : escape(item.id),
+                'encrypt_id'    : escape(URLEncryptionDecryption.enc(item.id)),
+                'headline'      : escape(item.headline),
+                'is_active'     : escape(item.is_active),
+            })
+        return json_data
+
+
+class ActiveInactiveParkingLotTasks(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code":101, "message":"", "error":""}
+        
+    def post(self, request, **kwargs):
+        try:
+            instance_id = request.POST.get('id', None)
+            instance = Task.objects.get(id = instance_id)
+            if instance_id:
+                instance.is_active = not instance.is_active
+                instance.save()
+                self.response_format['status_code']=200
+                self.response_format['message']= 'Success'
+                
+        except Exception as es:
+            self.response_format['message']='error'
+            self.response_format['error'] = str(es)
+        return JsonResponse(self.response_format, status=200)
+    
+
+class ParkingLotTaskCreateOrUpdateView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : [],}
+        self.action = "Create"
+        self.context['title'] = 'Parking Lot Task'
+        self.template = 'admin/home/parkinglot-task/parkinglot-task-create-or-update.html'      
+
+
+    def get(self, request, *args, **kwargs):
+        id = URLEncryptionDecryption.dec(kwargs.pop('id', None))
+        if id:
+            self.action = "Update"
+            self.context['instance'] = get_object_or_404(Task, id=id)
+        
+        self.generateBreadcrumbs()
+        return render(request, self.template, context=self.context)
+    
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Parking Lot Task", "route" : reverse('home:parkinglot.task.view.index') ,'active' : False})
+        self.context['breadcrumbs'].append({"name" : "{} Parking Lot ".format(self.action), "route" : '','active' : True})
+
+    def post(self, request, *args, **kwargs):
+        instance_id = request.POST.get('instance_id', None)
+        form_data = request.POST
+
+        try:
+            if instance_id:
+                self.action = 'Updated'
+                instance = get_object_or_404(Task, id=instance_id)
+                instance.updated_by = request.user
+            else:
+                instance = Task()
+
+            instance.headline     = request.POST.get('headline',None)
+            instance.description  = request.POST.get('description',None)
+            instance.category = 'monthly'
+
+            instance.created_by   = request.user
+            instance.save()
+            
+            messages.success(request, f"Data Successfully: {self.action}")
+            
+        except Exception as e:
+            error_message = f"Something went wrong. {str(e)}"
+            messages.error(request, error_message)
+            self.context['instance'] = form_data
+            self.context['err_message'] = error_message
+            self.context['instance_id'] = instance_id
+            
+            if instance_id is not None and instance_id != "":
+                return render(request, self.template, context=self.context)
+            return render(request, self.template, context=self.context)
+        return redirect('home:parkinglot.task.view.index')
+
+
+@method_decorator(login_required, name='dispatch')
+class DestroyParkingLotTaskRecordsView(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code": 101, "message": "", "error": ""}
+
+    def post(self, request, *args, **kwargs):
+        try:
+            instance_id = request.POST.getlist('ids[]')
+            if instance_id:
+                Task.objects.filter(id__in=instance_id).delete()
+                self.response_format['status_code'] = 200
+                self.response_format['message'] = 'Success'
+        except Exception as e:
+            self.response_format['message'] = 'error'
+            self.response_format['error'] = str(e)
+        return JsonResponse(self.response_format, status=200)
+    
+
+
+# ----------------------------------------------------------------- Recovery TASK ------------------------------------------------------------------
+
+
+class RecoveryTaskView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : []}
+        self.template = 'admin/home/recovery-task/recovery-datatable.html'    
+        self.context['title'] = 'Recovery Task'
+        self.generateBreadcrumbs()
+        
+    def get(self, request, *args, **kwargs):
+        data_exists = self.check_data_exists()
+        self.context['data_exists'] = data_exists
+        return render(request, self.template, context=self.context)
+
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "RecoveryTask", "route" : '','active' : True})
+        
+    def check_data_exists(self):
+        data_exists = Task.objects.filter(category='recovery').exists()
+        return data_exists
+    
+
+class LoadRecoveryTaskDatatable(BaseDatatableView):
+    model = Task
+    order_columns = ['id','headline','is_active'] 
+    
+    def get_initial_queryset(self):
+
+        filter_value = self.request.POST.get('columns[3][search][value]', None)
+        if filter_value == '1':
+            return self.model.objects.filter(category='recovery', is_active=True).order_by('-id')
+        elif filter_value == '2':
+            return self.model.objects.filter(category='recovery', is_active=False).order_by('-id')
+        else:
+       
+            return Task.objects.filter(category='recovery').order_by('-id')
+    
+    def filter_queryset(self, qs):
+        search = self.request.POST.get('search[value]', None)
+        if search:
+            qs = qs.filter(Q(headline__istartswith=search))
+        return qs
+    
+    def prepare_results(self, qs):
+        json_data = []
+        for item in qs:
+            json_data.append({
+                'id'            : escape(item.id),
+                'encrypt_id'    : escape(URLEncryptionDecryption.enc(item.id)),
+                'headline'      : escape(item.headline),
+                'is_active'     : escape(item.is_active),
+            })
+        return json_data
+
+
+class ActiveInactiveRecoveryTasks(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code":101, "message":"", "error":""}
+        
+    def post(self, request, **kwargs):
+        try:
+            instance_id = request.POST.get('id', None)
+            instance = Task.objects.get(id = instance_id)
+            if instance_id:
+                instance.is_active = not instance.is_active
+                instance.save()
+                self.response_format['status_code']=200
+                self.response_format['message']= 'Success'
+                
+        except Exception as es:
+            self.response_format['message']='error'
+            self.response_format['error'] = str(es)
+        return JsonResponse(self.response_format, status=200)
+    
+
+class RecoveryTaskCreateOrUpdateView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = {"breadcrumbs" : [],}
+        self.action = "Create"
+        self.context['title'] = 'Parking Lot Task'
+        self.template = 'admin/home/recovery-task/recovery-task-create-or-update.html'      
+
+
+    def get(self, request, *args, **kwargs):
+        id = URLEncryptionDecryption.dec(kwargs.pop('id', None))
+        if id:
+            self.action = "Update"
+            self.context['instance'] = get_object_or_404(Task, id=id)
+        
+        self.generateBreadcrumbs()
+        return render(request, self.template, context=self.context)
+    
+    def generateBreadcrumbs(self):
+        self.context['breadcrumbs'].append({"name" : "Home", "route" : reverse('home:dashboard'),'active' : False})
+        self.context['breadcrumbs'].append({"name" : "Recovery Task", "route" : reverse('home:recovery.task.view.index') ,'active' : False})
+        self.context['breadcrumbs'].append({"name" : "{} Recovery Task ".format(self.action), "route" : '','active' : True})
+
+    def post(self, request, *args, **kwargs):
+        instance_id = request.POST.get('instance_id', None)
+        form_data = request.POST
+
+        try:
+            if instance_id:
+                self.action = 'Updated'
+                instance = get_object_or_404(Task, id=instance_id)
+                instance.updated_by = request.user
+            else:
+                instance = Task()
+
+            instance.headline     = request.POST.get('headline',None)
+            instance.description  = request.POST.get('description',None)
+            instance.category = 'monthly'
+
+            instance.created_by   = request.user
+            instance.save()
+            
+            messages.success(request, f"Data Successfully: {self.action}")
+            
+        except Exception as e:
+            error_message = f"Something went wrong. {str(e)}"
+            messages.error(request, error_message)
+            self.context['instance'] = form_data
+            self.context['err_message'] = error_message
+            self.context['instance_id'] = instance_id
+            
+            if instance_id is not None and instance_id != "":
+                return render(request, self.template, context=self.context)
+            return render(request, self.template, context=self.context)
+        return redirect('home:recovery.task.view.index')
+
+
+@method_decorator(login_required, name='dispatch')
+class DestroyRecoveryTaskRecordsView(View):
+    def __init__(self, **kwargs):
+        self.response_format = {"status_code": 101, "message": "", "error": ""}
+
+    def post(self, request, *args, **kwargs):
+        try:
+            instance_id = request.POST.getlist('ids[]')
+            if instance_id:
+                Task.objects.filter(id__in=instance_id).delete()
+                self.response_format['status_code'] = 200
+                self.response_format['message'] = 'Success'
+        except Exception as e:
+            self.response_format['message'] = 'error'
+            self.response_format['error'] = str(e)
+        return JsonResponse(self.response_format, status=200)

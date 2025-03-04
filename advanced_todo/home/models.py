@@ -19,7 +19,7 @@ class Task(AbstractDateFieldMix):
         ('daily', 'Daily Task'),
         ('weekly', 'Weekly Task'),
         ('monthly', 'Monthly Task'),
-        ('parking', 'Parking Lot'),
+        ('parkinglot', 'Parking Lot'),
         ('recovery', 'Recovery Task'),
     ]
 

@@ -61,9 +61,11 @@
 
 
                 <!--Home Sections-->
+
+                {% comment %} Inbox Task {% endcomment %}
                 <div class="menu-item ">
-                    <a class="menu-link {% if request.resolver_match.url_name in 'home:our.home-images-view.index,update_home_image_order,delete_home_image_order' %} active {% endif %}"
-                        {% comment %} href="{% url 'home:our.home-images-view.index' %}"> {% endcomment %}
+                    {% comment %} <a class="menu-link {% if request.resolver_match.url_name in 'home:inbox.task.view.index,inbox.task.datatable' %} active {% endif %}"
+                        href="{% url 'home:inbox.task.view.index' %}"> 
                         <span class="menu-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16">
                                 <path fill="white" d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/>
@@ -71,7 +73,7 @@
                         </span>
                         <span class="menu-title">Inbox Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
 
                 <div class="menu-item ">
@@ -101,8 +103,8 @@
 
                 {% comment %} Daily Task {% endcomment %}
                 <div class="menu-item ">
-                    <a class="menu-link {% if request.resolver_match.url_name in 'home:our.home-images-view.index,update_home_image_order,delete_home_image_order' %} active {% endif %}"
-                        {% comment %} href="{% url 'home:our.home-images-view.index' %}"> {% endcomment %}
+                    <a class="menu-link {% if request.resolver_match.url_name in 'home:daily.task.view.index,daily.task.datatable' %} active {% endif %}"
+                        href="{% url 'home:daily.task.view.index' %}">
                         <span class="menu-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16">
                                 <path fill="white" d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/>
@@ -112,10 +114,10 @@
                     </a>
                 </div>
 
-
+                {% comment %} weekly Task {% endcomment %}
                 <div class="menu-item ">
-                    <a class="menu-link {% if request.resolver_match.url_name in 'home:our.home-images-view.index,update_home_image_order,delete_home_image_order' %} active {% endif %}"
-                        {% comment %} href="{% url 'home:our.home-images-view.index' %}"> {% endcomment %}
+                    <a class="menu-link {% if request.resolver_match.url_name in 'home:weekly.task.view.index,weekly.task.datatable' %} active {% endif %}"
+                        href="{% url 'home:weekly.task.view.index' %}"> 
                         <span class="menu-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16">
                                 <path fill="white" d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/>
@@ -125,10 +127,10 @@
                     </a>
                 </div>
 
-
+                {% comment %} Monthly Task {% endcomment %}
                 <div class="menu-item ">
-                    <a class="menu-link {% if request.resolver_match.url_name in 'home:our.home-images-view.index,update_home_image_order,delete_home_image_order' %} active {% endif %}"
-                        {% comment %} href="{% url 'home:our.home-images-view.index' %}"> {% endcomment %}
+                    <a class="menu-link {% if request.resolver_match.url_name in 'home:monthly.task.view.index,monthly.task.datatable' %} active {% endif %}"
+                        href="{% url 'home:monthly.task.view.index' %}">
                         <span class="menu-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16">
                                 <path fill="white" d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/>
@@ -138,10 +140,10 @@
                     </a>
                 </div>
 
-
+                {% comment %} Parking Lot Task {% endcomment %}
                 <div class="menu-item ">
-                    <a class="menu-link {% if request.resolver_match.url_name in 'home:our.home-images-view.index,update_home_image_order,delete_home_image_order' %} active {% endif %}"
-                        {% comment %} href="{% url 'home:our.home-images-view.index' %}"> {% endcomment %}
+                    <a class="menu-link {% if request.resolver_match.url_name in 'home:parkinglot.task.view.index,parkinglot.task.datatable' %} active {% endif %}"
+                        href="{% url 'home:parkinglot.task.view.index' %}"> 
                         <span class="menu-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16">
                                 <path fill="white" d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/>
@@ -151,10 +153,10 @@
                     </a>
                 </div>
 
-
+                {% comment %} Recovery Task {% endcomment %}
                 <div class="menu-item ">
-                    <a class="menu-link {% if request.resolver_match.url_name in 'home:our.home-images-view.index,update_home_image_order,delete_home_image_order' %} active {% endif %}"
-                        {% comment %} href="{% url 'home:our.home-images-view.index' %}"> {% endcomment %}
+                    <a class="menu-link {% if request.resolver_match.url_name in 'home:recovery.task.view.index,recovery.task.datatable' %} active {% endif %}"
+                        href="{% url 'home:recovery.task.view.index' %}"> 
                         <span class="menu-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16">
                                 <path fill="white" d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/>
@@ -164,11 +166,13 @@
                     </a>
                 </div>
                  
-                
-            {% comment %} {% if request.user|check_permission:'auth.view_roles' or request.user|check_permission:'auth.view_groups' or request.user|check_permission:'auth.view_admin' %} {% endcomment %}
+            {% comment %} ------------------------------------------------------------------Admin pannel-------------------------------------------------------------------------------------- {% endcomment %}
+
+
+            {% comment %} {% if request.user|check_permission:'auth.view_roles' or request.user|check_permission:'auth.view_groups' or request.user|check_permission:'auth.view_admin' %} 
             {% comment %} {% if request.user|check_permission:'auth.view_usermanagements'%} {% endcomment %}
 
-            <div data-kt-menu-trigger="click"
+            {% comment %} <div data-kt-menu-trigger="click"
                 class="menu-item menu-accordion {% if request.resolver_match.url_name in 'roles.index,roles.create,roles.update,admins.index,admins.create,admins.update,groups.index,groups.create,groups.update' %} show {% endif %}">
                 <span class="menu-link">
                     <span class="menu-icon">
@@ -180,15 +184,15 @@
                     </span>
                     <span class="menu-title">User Management</span>
                     <span class="menu-arrow"></span>
-                </span>
+                </span> {% endcomment %}
 
 
-                <div class = "parrent-div">
+                {% comment %} <div class = "parrent-div">
                 </div>
                 <div class="menu-sub menu-sub-accordion">
                     <div class="menu-item">
                         <a class="menu-link {% if request.resolver_match.url_name in 'roles.index,roles.create,roles.update' %} active {% endif %}"
-                            {% comment %} href="{% url 'users:roles.index' %}"> {% endcomment %}
+                            href="{% url 'users:roles.index' %}"> 
                             <span class="menu-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" height="16" width="20" >
                                     <path fill="white" d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM112 256H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/>
@@ -196,11 +200,11 @@
                             </span>
                             <span class="menu-title">Roles</span>
                         </a>
-                    </div> 
+                    </div>  {% endcomment %}
 
-                    <div class="menu-item">
+                    {% comment %} <div class="menu-item">
                         <a class="menu-link {% if request.resolver_match.url_name in 'groups.index,groups.create,groups.update' %} active {% endif %}"
-                            {% comment %} href="{% url 'users:groups.index' %}"> {% endcomment %}
+                             href="{% url 'users:groups.index' %}">
                             <span class="menu-icon">
                                 <span class="svg-icon svg-icon-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" height="16" width="20" >
@@ -210,11 +214,11 @@
                             </span>
                             <span class="menu-title">Groups</span>
                         </a>
-                    </div>
-
+                    </div> {% endcomment %}
+                    {% comment %}
                     <div class="menu-item">
                         <a class="menu-link {% if request.resolver_match.url_name in 'admins.index,admins.create,admins.update,' %} active {% endif %}"
-                         {% comment %} href="{% url 'users:users.index' %}">  {% endcomment %}
+                          href="{% url 'users:users.index' %}"> 
                             <span class="menu-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="16" width="20" >
                                     <path fill="white" d="M399 384.2C376.9 345.8 335.4 320 288 320H224c-47.4 0-88.9 25.8-111 64.2c35.2 39.2 86.2 63.8 143 63.8s107.8-24.7 143-63.8zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm256 16a72 72 0 1 0 0-144 72 72 0 1 0 0 144z"/>
@@ -223,7 +227,9 @@
                             <span class="menu-title">Admin</span>
                         </a>
                     </div> 
-                </div>
+                </div> 
+                    {% endcomment %}
+
             </div> 
         </div>
     </div>
