@@ -7,12 +7,10 @@ from django.contrib import messages
 from django.conf import settings
 from advanced_todo_core.helpers.hash import Hash
 from django.http import JsonResponse,HttpResponse
-from django.utils import timezone
-from datetime import timedelta
 from django.core.mail import send_mail
 import random
 from django.urls import reverse
-
+from home.models import WeeklyTask
 class UserRegisterView(View):
     def __init__(self):
         self.response_format = {"status_code": 101, "message": "", "error": ""}
@@ -153,5 +151,7 @@ class OtpVerificationView(View):
         
 
 def signout(request):
+    if WeeklyTask.objects.filter(user=request.user).count() == 0:
+        return redirect('home:startday') 
     logout(request)
     return redirect('authentication:login')

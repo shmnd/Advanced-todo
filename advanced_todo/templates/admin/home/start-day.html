@@ -1,0 +1,331 @@
+{% extends 'admin/layouts/apps.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .schedule-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+    @media (max-width: 768px) {
+        .schedule-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    .schedule {
+        border-collapse: collapse;
+        width: 100%;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        overflow-x: auto;
+    }
+    .schedule th, .schedule td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        white-space: nowrap;
+    }
+    .schedule th {
+        background-color: #f0f0f0;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    .todo-list {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        max-height: 700px;
+        overflow-y: auto;
+        margin-bottom: 20px;
+    }
+    .todo-list h4 {
+        margin-bottom: 10px;
+        text-align: center;
+        background-color: #f0f0f0;
+        padding: 5px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+    .todo-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f0f0f0;
+        padding: 5px;
+        margin-bottom: 5px;
+        border-radius: 3px;
+    }
+    .todo-item button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        margin-left: 5px;
+    }
+    .todo-input {
+        width: calc(100% - 60px);
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        margin-bottom: 10px;
+    }
+    button {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 3px;
+        background-color: rgb(179, 30, 147);
+        color: #fff;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+    button:hover {
+        background-color: rgb(1, 5, 10);
+    }
+</style>
+
+<div class="schedule-container">
+    <table class="schedule">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+            </tr>
+        </thead>
+        <tbody id="schedule-body">
+        </tbody>
+    </table>
+
+    <div>
+        <div class="todo-list">
+            <h4>Start Day To-Do</h4>
+            <input type="text" id="start-task-input" class="todo-input" placeholder="Add a task">
+            <button onclick="addTask('start')">Add</button>
+            <ul id="start-tasks"></ul>
+        </div>
+
+        <div class="todo-list">
+            <h4>End Day To-Do</h4>
+            <input type="text" id="end-task-input" class="todo-input" placeholder="Add a task">
+            <button onclick="addTask('end')">Add</button>
+            <ul id="end-tasks"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    
+    function generateTimeSlots() {
+        const tbody = document.getElementById('schedule-body');
+        let startTime = new Date(0, 0, 0, 8, 0);
+        const endTime = new Date(0, 0, 0, 20, 0);
+    
+        while (startTime < endTime) {
+            const row = document.createElement('tr');
+            const timeCell = document.createElement('td');
+            const endSlot = new Date(startTime.getTime() + 30 * 60 * 1000);
+            const timeValue = `${String(startTime.getHours()).padStart(2, '0')}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+            timeCell.textContent = `${timeValue} - ${String(endSlot.getHours()).padStart(2, '0')}:${String(endSlot.getMinutes()).padStart(2, '0')}`;
+            row.appendChild(timeCell);
+    
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            days.forEach(day => {
+                const cell = document.createElement('td');
+                cell.setAttribute('contenteditable', 'true');
+                cell.setAttribute('data-day', day.toLowerCase());
+                cell.setAttribute('data-time', timeValue);
+                cell.addEventListener('blur', () => saveWeeklyTask(cell));
+                row.appendChild(cell);
+            });
+            tbody.appendChild(row);
+            startTime = endSlot;
+        }
+    }
+    generateTimeSlots();
+    
+    function saveWeeklyTask(cell) {
+        const taskText = cell.textContent.trim();
+        const day = cell.getAttribute('data-day');
+        const time = cell.getAttribute('data-time');
+        const taskId = cell.getAttribute('data-task-id') || null;
+    
+        console.log(`📝 Saving task "${taskText}" for ${day} at ${time}, Task ID: ${taskId}`);
+    
+        if (taskText) {
+            fetch('/api/add-task/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    task: taskText,
+                    day: day,
+                    time: time,
+                    type: 'weekly',
+                    task_id: taskId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log("✅ Task saved:", data);
+                    cell.setAttribute('data-task-id', data.task_id);
+                } else {
+                    console.error("❌ Failed to save task:", data);
+                }
+            })
+            .catch(error => console.error("❌ Error saving task:", error));
+        } else if (taskId) {
+            console.log(`🗑️ Clearing task for ${day} at ${time}, Task ID: ${taskId}`);
+            fetch(`/api/delete-task/${taskId}/?type=weekly`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(() => {
+                console.log("✅ Task deleted successfully.");
+                cell.removeAttribute('data-task-id');
+            })
+            .catch(error => console.error("❌ Error deleting task:", error));
+        }
+    }
+    
+    function addTask(type) {
+        const input = document.getElementById(type + '-task-input');
+        const taskText = input.value.trim();
+    
+        console.log(`📝 Adding "${taskText}" to ${type} to-do list.`);
+    
+        if (taskText) {
+            fetch('/api/add-task/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    task: taskText,
+                    task_type: type,
+                    type: 'todo'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log("✅ To-Do task added:", data);
+                    window.location.reload();
+                } else {
+                    console.error("❌ Failed to add to-do task:", data);
+                }
+            })
+            .catch(error => console.error("❌ Error adding to-do task:", error));
+        } else {
+            console.warn("⚠️ Task text is empty, not saving.");
+        }
+    }
+
+
+    fetch('/api/get-tasks/')
+    .then(response => response.json())
+    .then(data => {
+        console.log("✅ Fetched Tasks: ", data);  // Add this log
+        const startTaskList = document.getElementById('start-tasks');
+        const endTaskList = document.getElementById('end-tasks');
+        startTaskList.innerHTML = '';
+        endTaskList.innerHTML = '';
+
+        data.todo_tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+            li.innerHTML = `
+                ${task.task}
+                <span>
+                    <button onclick="editTask(this, ${task.id})">✏️</button>
+                    <button onclick="deleteTask(this, ${task.id})">🗑️</button>
+                </span>
+            `;
+            task.task_type === 'start' ? startTaskList.appendChild(li) : endTaskList.appendChild(li);
+        });
+
+        data.weekly_tasks.forEach(task => {
+            const taskTime = task.time; // Already in HH:MM format
+            const dayColumn = document.querySelector(`td[data-day="${task.day.toLowerCase()}"][data-time="${taskTime}"]`);
+            console.log(`🟢 Looking for cell with day: ${task.day.toLowerCase()}, time: ${taskTime}`, dayColumn);
+
+            if (dayColumn) {
+                dayColumn.textContent = task.task;
+                dayColumn.setAttribute('data-task-id', task.id);
+                dayColumn.classList.add('has-task');
+            } else {
+                console.warn(`⚠️ No matching cell found for task: "${task.task}" on ${task.day.toLowerCase()} at ${taskTime}`);
+            }
+        });
+    })
+    .catch(error => console.error("❌ Error fetching tasks:", error));
+
+    // Edit Task Function
+    function editTask(button, taskId) {
+        const newTask = prompt("Edit your task:", button.parentElement.parentElement.textContent.trim());
+        if (newTask) {
+            console.log(`📝 Attempting to update task ID ${taskId} with new text: "${newTask}"`);
+            fetch(`/api/update-task/${taskId}/?type=todo`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ task: newTask })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'updated') {
+                    console.log("✅ Task updated successfully:", data);
+                    window.location.reload();  // Reload to see the updated task
+                } else {
+                    console.error("❌ Failed to update task:", data);
+                }
+            })
+            .catch(error => console.error("❌ Error updating task:", error));
+        }
+    }
+
+// Delete Task Function
+function deleteTask(button, taskId) {
+    console.log(`🗑️ Attempting to delete task ID ${taskId}`);
+    fetch(`/api/delete-task/${taskId}/?type=todo`, {
+        method: 'POST',
+        headers: { 
+            'X-CSRFToken': '{{ csrf_token }}' 
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'deleted') {
+            console.log("✅ Task deleted successfully:", data);
+            window.location.reload();  // Reload to reflect the deletion
+        } else {
+            console.error("❌ Failed to delete task:", data);
+        }
+    })
+    .catch(error => console.error("❌ Error deleting task:", error));
+}
+
+
+
+
+    
+</script>
+{% endblock content %}

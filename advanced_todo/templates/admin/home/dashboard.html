@@ -71,6 +71,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Inbox Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_inbox_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              {% comment %} <a href = "{% url 'home:importent.task.view.index' %}"> {% endcomment %}
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 
@@ -79,6 +84,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Important Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_important_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              <a href = "{% url 'home:importent.task.view.index' %}">
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 
@@ -87,6 +97,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Urgent Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_urgent_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              <a href = "{% url 'home:urgent.task.view.index' %}">
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 
@@ -95,6 +110,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Daily Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_daily_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              <a href = "{% url 'home:daily.task.view.index' %}">
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 
@@ -103,6 +123,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Weekly Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_weekly_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              <a href = "{% url 'home:weekly.task.view.index' %}">
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 
@@ -111,6 +136,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Monthly Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_monthly_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              <a href = "{% url 'home:monthly.task.view.index' %}">
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 
@@ -119,6 +149,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Parking Lot Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_parking_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              <a href = "{% url 'home:parkinglot.task.view.index' %}">
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 
@@ -127,6 +162,11 @@
           <div class="wrap">
             <h4 class="c-dashboardInfo__title">Total Recovery Tasks</h4>
             <span class="c-dashboardInfo__count">{{ total_recovery_tasks }}</span>
+            <span
+              class="hind-font caption-12 c-dashboardInfo__subInfo">
+              <a href = "{% url 'home:recovery.task.view.index' %}">
+              <i style='font-size:24px' class='fas'>&#xf061;</i></a>
+            </span>
           </div>
         </div>
 

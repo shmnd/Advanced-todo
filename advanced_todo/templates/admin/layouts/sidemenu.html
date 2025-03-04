@@ -8,7 +8,7 @@
     data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_app_sidebar_mobile_toggle">
     <div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo" style="background-color:#ffffff;">
 
-        <a href="{% url 'home:dashboard' %}"> <!--GIVE LOGOS HERE -->
+        <a href="{% url 'home:startday' %}"> <!--GIVE LOGOS HERE -->
             <img alt="Logo - EWT" src="{% static 'assets/media/images/logo11.png' %}" class="app-sidebar-logo-default" style="height:50px; width: 140px;"/>
             <img alt="Logo - EWT" src="{% static 'assets/media/images/small-logo.png' %}" class="app-sidebar-logo-minimize"  style="width: 50px;"/>
         </a>
@@ -38,6 +38,24 @@
             <div class="menu menu-column menu-rounded menu-sub-indention px-3" id="#kt_app_sidebar_menu"
                 data-kt-menu="true" data-kt-menu-expand="false">
 
+                {% comment %} Day {% endcomment %}
+
+                <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'startday' %}active{% endif %}"
+                        href="{% url 'home:startday' %}">
+                        <span class="menu-icon">
+                            <span class="svg-icon svg-icon-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list-task" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M2 2.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5V3a.5.5 0 0 0-.5-.5zM3 3H2v1h1z"/>
+                                    <path d="M5 3.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5M5.5 7a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 4a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1z"/>
+                                    <path fill-rule="evenodd" d="M1.5 7a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5zM2 7h1v1H2zm0 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm1 .5H2v1h1z"/>
+                                  </svg>
+                            </span>
+                        </span>
+                        <span class="menu-title">Start Day</span>
+                    </a>
+                </div>
+
 
                 {% comment %} {% if request.user|check_permission:'auth.view_dashboards' %} {% endcomment %}
                 <div class="menu-item">
@@ -63,6 +81,8 @@
                 <!--Home Sections-->
 
                 {% comment %} Inbox Task {% endcomment %}
+
+                
                 <div class="menu-item ">
                     {% comment %} <a class="menu-link {% if request.resolver_match.url_name in 'home:inbox.task.view.index,inbox.task.datatable' %} active {% endif %}"
                         href="{% url 'home:inbox.task.view.index' %}"> 
@@ -73,10 +93,11 @@
                         </span>
                         <span class="menu-title">Inbox Tasks</span>
                     </a>
-                </div> {% endcomment %}
+                </div> 
 
+                {% comment %} Importent Task {% endcomment %}
 
-                <div class="menu-item ">
+                {% comment %} <div class="menu-item ">
                     <a class="menu-link {% if request.resolver_match.url_name in 'home:importent.task.view.index,importent.task.datatable' %} active {% endif %}"
                         href="{% url 'home:importent.task.view.index' %}">
                         <span class="menu-icon">
@@ -86,10 +107,12 @@
                         </span>
                         <span class="menu-title">Important Tasks</span>
                     </a>
-                </div>
+                </div> 
 
                 {% comment %} urgent {% endcomment %}
-                <div class="menu-item ">
+
+
+                {% comment %} <div class="menu-item ">
                     <a class="menu-link {% if request.resolver_match.url_name in 'home:urgent.task.view.index,urgent.task.datatable' %} active {% endif %}"
                         href="{% url 'home:urgent.task.view.index' %}">
                         <span class="menu-icon">
@@ -99,10 +122,12 @@
                         </span>
                         <span class="menu-title">Urgent Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
                 {% comment %} Daily Task {% endcomment %}
-                <div class="menu-item ">
+
+
+                {% comment %} <div class="menu-item ">
                     <a class="menu-link {% if request.resolver_match.url_name in 'home:daily.task.view.index,daily.task.datatable' %} active {% endif %}"
                         href="{% url 'home:daily.task.view.index' %}">
                         <span class="menu-icon">
@@ -112,10 +137,12 @@
                         </span>
                         <span class="menu-title">Daily Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
                 {% comment %} weekly Task {% endcomment %}
-                <div class="menu-item ">
+
+
+                {% comment %} <div class="menu-item ">
                     <a class="menu-link {% if request.resolver_match.url_name in 'home:weekly.task.view.index,weekly.task.datatable' %} active {% endif %}"
                         href="{% url 'home:weekly.task.view.index' %}"> 
                         <span class="menu-icon">
@@ -125,10 +152,12 @@
                         </span>
                         <span class="menu-title">Weekly Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
                 {% comment %} Monthly Task {% endcomment %}
-                <div class="menu-item ">
+
+
+                {% comment %} <div class="menu-item ">
                     <a class="menu-link {% if request.resolver_match.url_name in 'home:monthly.task.view.index,monthly.task.datatable' %} active {% endif %}"
                         href="{% url 'home:monthly.task.view.index' %}">
                         <span class="menu-icon">
@@ -138,10 +167,12 @@
                         </span>
                         <span class="menu-title">Monthly Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
                 {% comment %} Parking Lot Task {% endcomment %}
-                <div class="menu-item ">
+
+
+                {% comment %} <div class="menu-item ">
                     <a class="menu-link {% if request.resolver_match.url_name in 'home:parkinglot.task.view.index,parkinglot.task.datatable' %} active {% endif %}"
                         href="{% url 'home:parkinglot.task.view.index' %}"> 
                         <span class="menu-icon">
@@ -151,10 +182,12 @@
                         </span>
                         <span class="menu-title">Parking Lot Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
                 {% comment %} Recovery Task {% endcomment %}
-                <div class="menu-item ">
+
+
+                {% comment %} <div class="menu-item ">
                     <a class="menu-link {% if request.resolver_match.url_name in 'home:recovery.task.view.index,recovery.task.datatable' %} active {% endif %}"
                         href="{% url 'home:recovery.task.view.index' %}"> 
                         <span class="menu-icon">
@@ -164,7 +197,7 @@
                         </span>
                         <span class="menu-title">Recovery Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
                  
             {% comment %} ------------------------------------------------------------------Admin pannel-------------------------------------------------------------------------------------- {% endcomment %}
 

@@ -41,3 +41,39 @@ class Task(AbstractDateFieldMix):
         constraints = [
             models.UniqueConstraint(fields=['headline', 'category'], name='unique_headline_per_category')
         ]  # ✅ Added unique constraint
+
+
+
+
+# Task model for Weekly Schedule
+class WeeklyTask(models.Model):
+    DAYS_OF_WEEK = [
+        ('monday', 'Monday'),
+        ('tuesday', 'Tuesday'),
+        ('wednesday', 'Wednesday'),
+        ('thursday', 'Thursday'),
+        ('friday', 'Friday'),
+        ('saturday', 'Saturday'),
+    ]
+
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    day = models.CharField(max_length=10, choices=DAYS_OF_WEEK)
+    time = models.TimeField()
+    task = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.day.capitalize()} - {self.time} - {self.task}"
+
+# Task model for Start and End Day To-Do Lists
+class ToDoTask(models.Model):
+    TASK_TYPE = [
+        ('start', 'Start Day'),
+        ('end', 'End Day'),
+    ]
+
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    task_type = models.CharField(max_length=5, choices=TASK_TYPE)
+    task = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.get_task_type_display()} - {self.task}"

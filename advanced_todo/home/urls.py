@@ -6,7 +6,13 @@ app_name = 'home'
 
 urlpatterns = [
 
-    path('', login_required(views.HomeView.as_view()), name= 'dashboard'),
+    path('', views.StartDayView.as_view(), name='startday'),
+    path('api/get-tasks/', views.GetTasksView.as_view(), name='get_tasks'),
+    path('api/add-task/', views.AddTaskView.as_view(), name='add_task'),
+    path('api/delete-task/<int:task_id>/', views.DeleteTaskView.as_view(), name='delete_task'),
+    path('api/update-task/<int:task_id>/', views.UpdateTaskView.as_view(), name='update_task'), 
+
+    path('dashboard/', login_required(views.HomeView.as_view()), name= 'dashboard'),
 
 
     re_path(r'^important-tasks/', include([

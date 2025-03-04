@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.views import View
-from home.models import Task
+from home.models import Task,WeeklyTask, ToDoTask
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django_datatables_view.base_datatable_view import BaseDatatableView
@@ -11,12 +11,17 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.utils.dateparse import parse_time
+from django.forms.models import model_to_dict
+
 
 # ---------------------------------------------------  Dashboard  -------------------------------------------------------------------
-class HomeView(LoginRequiredMixin,View):
+class HomeView(View):
     def __init__(self):
         self.context = {}
-        self.context['title'] = 'Task LIST'
+        self.context['title'] = 'Task List'
 
     def get(self, request, *args, **kwargs):
         # Count tasks based on category
@@ -1103,3 +1108,104 @@ class DestroyRecoveryTaskRecordsView(View):
             self.response_format['message'] = 'error'
             self.response_format['error'] = str(e)
         return JsonResponse(self.response_format, status=200)
+    
+# ---------------------------------------------------  Start Day  -------------------------------------------------------------------
+# Start Day View
+class StartDayView(LoginRequiredMixin, View):
+    def __init__(self):
+        self.context = {}
+        self.context['title'] = 'Start Day'
+
+    def get(self, request, *args, **kwargs):
+        # Fetch weekly tasks and to-do tasks
+        weekly_tasks = WeeklyTask.objects.filter(user=request.user).values()
+        todo_tasks = ToDoTask.objects.filter(user=request.user).values()
+
+        # Pass tasks to context
+        self.context['weekly_tasks'] = list(weekly_tasks)
+        self.context['todo_tasks'] = list(todo_tasks)
+
+        # Render the template with context
+        return render(request, "admin/home/start-day.html", self.context)
+
+
+# API: Get Tasks
+@method_decorator(csrf_exempt, name='dispatch')
+class GetTasksView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # Convert `time` field to string in `HH:MM` format
+        weekly_tasks = WeeklyTask.objects.filter(user=user)
+        weekly_tasks_list = [
+            {**model_to_dict(task), 'time': task.time.strftime('%H:%M')}
+            for task in weekly_tasks
+        ]
+
+        # Fetch To-Do tasks as well
+        todo_tasks = ToDoTask.objects.filter(user=user).values()
+        
+        return JsonResponse({
+            'weekly_tasks': weekly_tasks_list,
+            'todo_tasks': list(todo_tasks),
+        })
+
+# API: Add Task
+@method_decorator(csrf_exempt, name='dispatch')
+class AddTaskView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        user = request.user
+
+        # Check task type
+        if data['type'] == 'weekly':
+            # Check if it's an update or new task
+            if 'task_id' in data and data['task_id']:
+                task = get_object_or_404(WeeklyTask, id=data['task_id'])
+                task.task = data['task']
+                task.save()
+            else:
+                task = WeeklyTask.objects.create(
+                    user=user,
+                    day=data['day'],
+                    time=parse_time(data['time']),
+                    task=data['task']
+                )
+        else:
+            # Handle To-Do tasks
+            task = ToDoTask.objects.create(
+                user=user,
+                task_type=data['task_type'],
+                task=data['task']
+            )
+
+        # Return JSON response with task ID
+        return JsonResponse({'status': 'success', 'task_id': task.id})
+
+
+# API: Delete Task
+@method_decorator(csrf_exempt, name='dispatch')
+class DeleteTaskView(LoginRequiredMixin, View):
+    def post(self, request, task_id, *args, **kwargs):
+        task_type = request.GET.get('type')
+        if task_type == 'weekly':
+            WeeklyTask.objects.filter(id=task_id).delete()
+        else:
+            ToDoTask.objects.filter(id=task_id).delete()
+        return JsonResponse({'status': 'deleted'})
+
+# API: Update Task
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateTaskView(LoginRequiredMixin, View):
+    def post(self, request, task_id, *args, **kwargs):
+        data = json.loads(request.body)
+        task_type = request.GET.get('type')
+        if task_type == 'weekly':
+            task = get_object_or_404(WeeklyTask, id=task_id)
+            task.task = data['task']
+            task.save()
+        else:
+            task = get_object_or_404(ToDoTask, id=task_id)
+            task.task = data['task']
+            task.save()
+        return JsonResponse({'status': 'updated'})
