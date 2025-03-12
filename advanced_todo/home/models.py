@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from authentication.models import Users
+from django.utils import timezone
 
 # Common date fields
 class AbstractDateFieldMix(models.Model):
@@ -9,39 +10,6 @@ class AbstractDateFieldMix(models.Model):
 
     class Meta:
         abstract = True
-
-# Generic Task Model
-class Task(AbstractDateFieldMix):
-    TASK_CATEGORIES = [
-        ('inbox', 'Inbox'),
-        ('important', 'Important Task'),
-        ('urgent', 'Urgent Task'),
-        ('daily', 'Daily Task'),
-        ('weekly', 'Weekly Task'),
-        ('monthly', 'Monthly Task'),
-        ('parkinglot', 'Parking Lot'),
-        ('recovery', 'Recovery Task'),
-    ]
-
-    category = models.CharField(max_length=20, choices=TASK_CATEGORIES, default='inbox')
-    headline = models.CharField(_('Headline'), max_length=255, blank=True, null=True)
-    description = models.TextField(_('Description'), max_length=500, blank=True, null=True)
-    is_active = models.BooleanField(_('Status'), default=True)
-    is_task = models.BooleanField(_('Task'), default=True)
-    created_by = models.ForeignKey(Users, related_name="task_created_by", on_delete=models.CASCADE, null=True, blank=True)
-    updated_by = models.ForeignKey(Users, related_name="task_updated_by", on_delete=models.CASCADE, null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.get_category_display()}: {self.headline}"
-    
-    class Meta : 
-        verbose_name          = "Task"
-        verbose_name_plural   = "Tasks"
-
-        constraints = [
-            models.UniqueConstraint(fields=['headline', 'category'], name='unique_headline_per_category')
-        ]  # ✅ Added unique constraint
-
 
 
 
@@ -78,3 +46,21 @@ class ToDoTask(AbstractDateFieldMix):
 
     def __str__(self):
         return f"{self.get_task_type_display()} - {self.task}"
+
+class Note(AbstractDateFieldMix):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="notes")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    is_checklist = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+class ChecklistItem(AbstractDateFieldMix):
+    note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name="checklist_items")
+    text = models.CharField(max_length=255)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.text

@@ -181,7 +181,7 @@
         console.log(`📝 Saving task "${taskText}" for ${day} at ${time}, Task ID: ${taskId}`);
     
         if (taskText) {
-            fetch('/api/add-task/', {
+            fetch('task/api/add-task/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -207,7 +207,7 @@
             .catch(error => console.error("❌ Error saving task:", error));
         } else if (taskId) {
             console.log(`🗑️ Clearing task for ${day} at ${time}, Task ID: ${taskId}`);
-            fetch(`/api/delete-task/${taskId}/?type=weekly`, {
+            fetch(`task/api/delete-task/${taskId}/?type=weekly`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}'
@@ -228,7 +228,7 @@
         console.log(`📝 Adding "${taskText}" to ${type} to-do list.`);
     
         if (taskText) {
-            fetch('/api/add-task/', {
+            fetch('task/api/add-task/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -256,7 +256,7 @@
     }
 
 
-    fetch('/api/get-tasks/')
+    fetch('task/api/get-tasks/')
     .then(response => response.json())
     .then(data => {
         console.log("✅ Fetched Tasks: ", data);  // Add this log
@@ -299,7 +299,7 @@
         const newTask = prompt("Edit your task:", button.parentElement.parentElement.textContent.trim());
         if (newTask) {
             console.log(`📝 Attempting to update task ID ${taskId} with new text: "${newTask}"`);
-            fetch(`/api/update-task/${taskId}/?type=todo`, {
+            fetch(`task/api/update-task/${taskId}/?type=todo`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -323,7 +323,7 @@
 // Delete Task Function
 function deleteTask(button, taskId) {
     console.log(`🗑️ Attempting to delete task ID ${taskId}`);
-    fetch(`/api/delete-task/${taskId}/?type=todo`, {
+    fetch(`task/api/delete-task/${taskId}/?type=todo`, {
         method: 'POST',
         headers: { 
             'X-CSRFToken': '{{ csrf_token }}' 

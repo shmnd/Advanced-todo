@@ -1,0 +1,302 @@
+{% extends 'admin/layouts/apps.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .c-dashboardInfo {
+    margin-bottom: 15px;
+  }
+  .c-dashboardInfo .wrap {
+    background: #ffffff;
+    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 7px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 40px 25px 20px;
+    height: 100%;
+  }
+  .c-dashboardInfo__title,
+  .c-dashboardInfo__subInfo {
+    color: #6c6c6c;
+    font-size: 1.18em;
+  }
+  .c-dashboardInfo span {
+    display: block;
+  }
+  .c-dashboardInfo__count {
+    font-weight: 600;
+    font-size: 2.5em;
+    line-height: 64px;
+    color: #323c43;
+  }
+  .c-dashboardInfo .wrap:after {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    content: "";
+  }
+</style>
+
+<!--begin::Content wrapper-->
+<div class="d-flex flex-column flex-column-fluid">
+  <div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
+    <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+      <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
+        <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">Dashboard</h1>
+        <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
+          <li class="breadcrumb-item text-muted">
+            <a href="" class="text-muted text-hover-primary">Home</a>
+          </li>
+          <li class="breadcrumb-item">
+            <span class="bullet bg-gray-400 w-5px h-2px"></span>
+          </li>
+          <li class="breadcrumb-item text-muted">Tasks</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Keep-Style Notes Section -->
+  <div class="container">
+    
+    <div class="d-flex justify-content-center mb-3">
+      <input type="text" id="note-title" class="form-control w-50" placeholder="Enter a note...">
+      <input type="checkbox" id="checklist-toggle" class="ms-2"> 
+      <button class="btn btn-primary ms-2" onclick="addNote()">Add Note</button>
+    </div>
+
+    <div id="note-container" class="d-flex flex-wrap gap-3 justify-content-center"></div>
+  </div>
+  
+</div>
+<!--end::Content wrapper-->
+
+<style>
+  #note-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+  }
+  .note {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+  }
+  h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      cursor: pointer;
+  }
+  .note textarea {
+      width: 100%;
+      height: 100px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      resize: none;
+  }
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    position: relative;
+  }
+
+  .checklist-item input[type="checkbox"] {
+    margin: 0;
+    width: 16px;  /* Ensure checkbox size consistency */
+    height: 16px;
+  }
+
+  .checklist-item input[type="text"] {
+      flex: 1;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+  }
+
+  .checklist-item button {
+      background: white;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 5px 6px;
+      font-size: 14px;
+      position: absolute;
+      right: -5px; 
+      top: -5px; 
+  }
+  button {
+      margin-top: 5px;
+      cursor: pointer;
+      border: none;
+      padding: 5px 10px;
+      background: #007bff;
+      color: white;
+      border-radius: 3px;
+  }
+  button:hover {
+      background: #0056b3;
+  }
+  .delete-btn {
+      background: red;
+  }
+</style>
+
+<script>
+  function getCSRFToken() {
+      return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+  }
+
+
+
+  function loadNotes() {
+      fetch('/cards/api/notes/')
+      .then(response => response.json())
+      .then(notes => {
+          const container = document.getElementById('note-container');
+          container.innerHTML = '';
+          notes.forEach(note => {
+              const noteElement = document.createElement('div');
+              noteElement.classList.add('note');
+              noteElement.dataset.noteId = note.id;
+              noteElement.innerHTML = `
+                  <h3 contenteditable="true" onblur="updateNote(${note.id}, this)">${note.title}</h3>
+                  ${note.is_checklist ? `<p><a href="#" onclick="addChecklistItem(${note.id})">+ Add Checklist Item</a></p><ul class="checklist"></ul>` 
+                  : `<textarea onblur="updateNoteDescription(${note.id}, this)">${note.description}</textarea>`}
+                  <button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>
+              `;
+              container.appendChild(noteElement);
+          });
+      });
+  }
+
+  function addNote() {
+      const noteTitle = document.getElementById('note-title').value.trim();
+      const isChecklist = document.getElementById('checklist-toggle').checked;
+      if (!noteTitle) return;
+
+      fetch('/cards/api/notes/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+          body: JSON.stringify({ title: noteTitle, description: "", is_checklist: isChecklist })
+      }).then(() => loadNotes());
+  }
+
+  function updateNote(noteId, element) {
+      fetch(`/cards/api/notes/${noteId}/`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+          body: JSON.stringify({ title: element.innerText.trim() })
+      });
+  }
+
+  function updateNoteDescription(noteId, element) {
+      fetch(`/cards/api/notes/${noteId}/`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+          body: JSON.stringify({ description: element.value.trim() })
+      });
+  }
+
+  function deleteNote(noteId) {
+      fetch(`/cards/api/notes/${noteId}/`, {
+          method: 'DELETE',
+          headers: { 'X-CSRFToken': getCSRFToken() }
+      }).then(() => loadNotes());
+  }
+
+  document.addEventListener('DOMContentLoaded', loadNotes);
+
+  function addChecklistItem(button) {
+    let noteId = button.closest('.note').getAttribute('data-note-id');
+    let checklistContainer = button.closest('.note').querySelector('.checklist');
+    
+    let itemText = prompt("Enter checklist item:");
+    if (!itemText) return;
+
+    fetch(`/cards/api/notes/${noteId}/items/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ text: itemText, is_completed: false })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "created") {
+            // Add new item to UI
+            let newItem = document.createElement("li");
+            newItem.classList.add("checklist-item");
+            newItem.innerHTML = `
+                <input type="checkbox">
+                <input type="text" value="${itemText}" readonly>
+                <button onclick="removeChecklistItem(this)">❌</button>
+            `;
+            checklistContainer.appendChild(newItem);
+        }
+    })
+    .catch(error => console.error("Error adding checklist item:", error));
+
+    function fetchNotes() {
+      fetch("/cards/api/notes/")
+          .then(response => response.json())
+          .then(notes => {
+              let noteContainer = document.getElementById("note-container");
+              noteContainer.innerHTML = ""; // Clear existing notes
+  
+              notes.forEach(note => {
+                  let noteElement = document.createElement("div");
+                  noteElement.classList.add("note");
+                  noteElement.setAttribute("data-note-id", note.id);
+  
+                  let content = `<h3 contenteditable="true">${note.title}</h3>`;
+  
+                  if (note.is_checklist) {
+                      content += `<p><a href="#" onclick="addChecklistItem(this)">+ Add Checklist Item</a></p>
+                                  <ul class="checklist">`;
+  
+                      // Fetch checklist items
+                      fetch(`/cards/api/notes/${note.id}/items/`)
+                          .then(response => response.json())
+                          .then(items => {
+                              items.forEach(item => {
+                                  content += `
+                                      <li class="checklist-item">
+                                          <input type="checkbox" ${item.is_completed ? "checked" : ""}>
+                                          <input type="text" value="${item.text}" readonly>
+                                          <button onclick="removeChecklistItem(this)">❌</button>
+                                      </li>
+                                  `;
+                              });
+                              content += `</ul>`;
+                              noteElement.innerHTML = content;
+                              noteContainer.appendChild(noteElement);
+                          });
+                  } else {
+                      content += `<textarea placeholder="Enter description...">${note.description || ""}</textarea>`;
+                      noteElement.innerHTML = content;
+                      noteContainer.appendChild(noteElement);
+                  }
+              });
+          })
+          .catch(error => console.error("Error fetching notes:", error));
+    }
+  
+}
+
+</script>
+
+{% endblock content %}
