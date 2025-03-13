@@ -155,147 +155,167 @@
 </style>
 
 <script>
-  function getCSRFToken() {
-      return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
-  }
-
-
-
-  function loadNotes() {
-      fetch('/cards/api/notes/')
-      .then(response => response.json())
-      .then(notes => {
-          const container = document.getElementById('note-container');
-          container.innerHTML = '';
-          notes.forEach(note => {
-              const noteElement = document.createElement('div');
-              noteElement.classList.add('note');
-              noteElement.dataset.noteId = note.id;
-              noteElement.innerHTML = `
-                  <h3 contenteditable="true" onblur="updateNote(${note.id}, this)">${note.title}</h3>
-                  ${note.is_checklist ? `<p><a href="#" onclick="addChecklistItem(${note.id})">+ Add Checklist Item</a></p><ul class="checklist"></ul>` 
-                  : `<textarea onblur="updateNoteDescription(${note.id}, this)">${note.description}</textarea>`}
-                  <button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>
-              `;
-              container.appendChild(noteElement);
-          });
-      });
-  }
-
-  function addNote() {
-      const noteTitle = document.getElementById('note-title').value.trim();
-      const isChecklist = document.getElementById('checklist-toggle').checked;
-      if (!noteTitle) return;
-
-      fetch('/cards/api/notes/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
-          body: JSON.stringify({ title: noteTitle, description: "", is_checklist: isChecklist })
-      }).then(() => loadNotes());
-  }
-
-  function updateNote(noteId, element) {
-      fetch(`/cards/api/notes/${noteId}/`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
-          body: JSON.stringify({ title: element.innerText.trim() })
-      });
-  }
-
-  function updateNoteDescription(noteId, element) {
-      fetch(`/cards/api/notes/${noteId}/`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
-          body: JSON.stringify({ description: element.value.trim() })
-      });
-  }
-
-  function deleteNote(noteId) {
-      fetch(`/cards/api/notes/${noteId}/`, {
-          method: 'DELETE',
-          headers: { 'X-CSRFToken': getCSRFToken() }
-      }).then(() => loadNotes());
-  }
-
-  document.addEventListener('DOMContentLoaded', loadNotes);
-
-  function addChecklistItem(button) {
-    let noteId = button.closest('.note').getAttribute('data-note-id');
-    let checklistContainer = button.closest('.note').querySelector('.checklist');
-    
-    let itemText = prompt("Enter checklist item:");
-    if (!itemText) return;
-
-    fetch(`/cards/api/notes/${noteId}/items/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-        },
-        body: JSON.stringify({ text: itemText, is_completed: false })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === "created") {
-            // Add new item to UI
-            let newItem = document.createElement("li");
-            newItem.classList.add("checklist-item");
-            newItem.innerHTML = `
-                <input type="checkbox">
-                <input type="text" value="${itemText}" readonly>
-                <button onclick="removeChecklistItem(this)">❌</button>
-            `;
-            checklistContainer.appendChild(newItem);
-        }
-    })
-    .catch(error => console.error("Error adding checklist item:", error));
-
-    function fetchNotes() {
-      fetch("/cards/api/notes/")
-          .then(response => response.json())
-          .then(notes => {
-              let noteContainer = document.getElementById("note-container");
-              noteContainer.innerHTML = ""; // Clear existing notes
-  
-              notes.forEach(note => {
-                  let noteElement = document.createElement("div");
-                  noteElement.classList.add("note");
-                  noteElement.setAttribute("data-note-id", note.id);
-  
-                  let content = `<h3 contenteditable="true">${note.title}</h3>`;
-  
-                  if (note.is_checklist) {
-                      content += `<p><a href="#" onclick="addChecklistItem(this)">+ Add Checklist Item</a></p>
-                                  <ul class="checklist">`;
-  
-                      // Fetch checklist items
-                      fetch(`/cards/api/notes/${note.id}/items/`)
-                          .then(response => response.json())
-                          .then(items => {
-                              items.forEach(item => {
-                                  content += `
-                                      <li class="checklist-item">
-                                          <input type="checkbox" ${item.is_completed ? "checked" : ""}>
-                                          <input type="text" value="${item.text}" readonly>
-                                          <button onclick="removeChecklistItem(this)">❌</button>
-                                      </li>
-                                  `;
-                              });
-                              content += `</ul>`;
-                              noteElement.innerHTML = content;
-                              noteContainer.appendChild(noteElement);
-                          });
-                  } else {
-                      content += `<textarea placeholder="Enter description...">${note.description || ""}</textarea>`;
-                      noteElement.innerHTML = content;
-                      noteContainer.appendChild(noteElement);
-                  }
-              });
-          })
-          .catch(error => console.error("Error fetching notes:", error));
-    }
-  
+// Function to retrieve CSRF token from cookies
+function getCSRFToken() {
+  return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
 }
+
+// Function to load all notes from the backend
+function loadNotes() {
+  fetch('/cards/api/notes/')
+  .then(response => response.json())
+  .then(notes => {
+      const container = document.getElementById('note-container');
+      container.innerHTML = '';
+
+      notes.forEach(note => {
+          const noteElement = document.createElement('div');
+          noteElement.classList.add('note');
+          noteElement.dataset.noteId = note.id;
+
+          let content = `
+              <h3 contenteditable="true" onblur="updateNote(${note.id}, this)">${note.title}</h3>`;
+
+          if (note.is_checklist) {
+              content += `
+                  <p><a href="#" onclick="addChecklistItem(this)">+ Add Checklist Item</a></p>
+                  <ul class="checklist" data-note-id="${note.id}"></ul>`;
+
+              // Fetch checklist items for this note
+              fetch(`/cards/api/notes/${note.id}/items/`)
+              .then(response => response.json())
+              .then(items => {
+                  let checklistContainer = noteElement.querySelector('.checklist');
+                  items.forEach(item => {
+                      let newItem = document.createElement("li");
+                      newItem.classList.add("checklist-item");
+                      newItem.setAttribute("data-item-id", item.id);
+                      newItem.innerHTML = `
+                          <input type="checkbox" ${item.is_completed ? "checked" : ""} onchange="toggleChecklistItem(${note.id}, ${item.id}, this)">
+                          <input type="text" value="${item.text}" readonly>
+                          <button onclick="removeChecklistItem(this, ${note.id}, ${item.id})">❌</button>
+                      `;
+                      checklistContainer.appendChild(newItem);
+                  });
+              })
+              .catch(error => console.error("Error fetching checklist items:", error));
+          } else {
+              content += `<textarea onblur="updateNoteDescription(${note.id}, this)">${note.description}</textarea>`;
+          }
+
+          content += `<button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>`;
+
+          noteElement.innerHTML = content;
+          container.appendChild(noteElement);
+      });
+  });
+}
+
+// Function to add a new note
+function addNote() {
+  const noteTitle = document.getElementById('note-title').value.trim();
+  const isChecklist = document.getElementById('checklist-toggle').checked;
+  if (!noteTitle) return;
+
+  fetch('/cards/api/notes/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+      body: JSON.stringify({ title: noteTitle, description: "", is_checklist: isChecklist })
+  }).then(() => loadNotes());
+}
+
+// Function to update a note title
+function updateNote(noteId, element) {
+  fetch(`/cards/api/notes/${noteId}/`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+      body: JSON.stringify({ title: element.innerText.trim() })
+  });
+}
+
+// Function to update a note description
+function updateNoteDescription(noteId, element) {
+  fetch(`/cards/api/notes/${noteId}/`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+      body: JSON.stringify({ description: element.value.trim() })
+  });
+}
+
+// Function to delete a note
+function deleteNote(noteId) {
+  fetch(`/cards/api/notes/${noteId}/`, {
+      method: 'DELETE',
+      headers: { 'X-CSRFToken': getCSRFToken() }
+  }).then(() => loadNotes());
+}
+
+// Function to add a checklist item inside a note
+function addChecklistItem(button) {
+  let noteElement = button.closest('.note');
+  let noteId = noteElement.getAttribute('data-note-id');
+  let checklistContainer = noteElement.querySelector('.checklist');
+
+  let itemText = prompt("Enter checklist item:");
+  if (!itemText) return;
+
+  fetch(`/cards/api/notes/${noteId}/items/`, {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken()
+      },
+      body: JSON.stringify({ text: itemText, is_completed: false })
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === "created") {
+          let newItem = document.createElement("li");
+          newItem.classList.add("checklist-item");
+          newItem.setAttribute("data-item-id", data.id);
+          newItem.innerHTML = `
+              <input type="checkbox" onchange="toggleChecklistItem(${noteId}, ${data.id}, this)">
+              <input type="text" value="${itemText}" readonly>
+              <button onclick="removeChecklistItem(this, ${noteId}, ${data.id})">❌</button>
+          `;
+          checklistContainer.appendChild(newItem);
+      }
+  })
+  .catch(error => console.error("Error adding checklist item:", error));
+}
+
+// Function to toggle checklist item completion
+function toggleChecklistItem(noteId, itemId, checkbox) {
+  fetch(`/cards/api/notes/${noteId}/items/${itemId}/`, {
+      method: "PUT",
+      headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken()
+      },
+      body: JSON.stringify({ is_completed: checkbox.checked })
+  })
+  .catch(error => console.error("Error updating checklist item:", error));
+}
+
+// Function to remove a checklist item
+function removeChecklistItem(button, noteId, itemId) {
+  fetch(`/cards/api/notes/${noteId}/items/${itemId}/`, {
+      method: "DELETE",
+      headers: {
+          "X-CSRFToken": getCSRFToken()
+      }
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === "deleted") {
+          button.parentElement.remove();
+      }
+  })
+  .catch(error => console.error("Error deleting checklist item:", error));
+}
+
+// Load notes when the page loads
+document.addEventListener('DOMContentLoaded', loadNotes);
 
 </script>
 
