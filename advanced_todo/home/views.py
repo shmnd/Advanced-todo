@@ -11,7 +11,7 @@ from django.utils.dateparse import parse_time
 from django.forms.models import model_to_dict
 from datetime import date
 from django.utils.timezone import localdate
-
+from django.views.decorators.http import require_POST
 
 
 # Start Day View
@@ -152,7 +152,7 @@ class NoteListView(View):
     """Handles fetching and creating notes"""
 
     def get(self, request):
-        notes = Note.objects.filter(user=request.user).values()
+        notes = Note.objects.filter(user=request.user).order_by('-is_pinned', '-id').values()
         return JsonResponse(list(notes), safe=False)
 
     def post(self, request):
@@ -237,3 +237,14 @@ class ChecklistItemView(View):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         
     
+@login_required
+@csrf_exempt  # Allow AJAX requests
+@require_POST  # Only allow POST requests
+def toggle_pin(request, note_id):
+    note = get_object_or_404(Note, id=note_id, user=request.user)
+
+    # Toggle pin status
+    note.is_pinned = not note.is_pinned
+    note.save()
+
+    return JsonResponse({'status': 'success', 'is_pinned': note.is_pinned})
