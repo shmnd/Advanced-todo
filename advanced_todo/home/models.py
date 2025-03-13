@@ -54,6 +54,10 @@ class Note(AbstractDateFieldMix):
     is_checklist = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     is_pinned = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0) 
+
+    class Meta:
+        ordering = ['-is_pinned', 'order'] 
 
     def __str__(self):
         return self.title

@@ -23,6 +23,7 @@ urlpatterns = [
         path('api/notes/<int:note_id>/items/<int:item_id>/', login_required(views.ChecklistItemView.as_view()), name='checklist-modify'),
 
         path('api/notes/<int:note_id>/pin/', views.toggle_pin, name='toggle_pin'),
+        path('api/notes/update-order/', views.update_order, name='update_order'),
       
     ])),
 ]

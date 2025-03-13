@@ -205,6 +205,12 @@
     background:rgb(18, 77, 135);
 }
 
+.note[draggable="true"] {
+  cursor: grab;
+}
+.note[draggable="true"]:active {
+  cursor: grabbing;
+}
 
 
 </style>
@@ -223,8 +229,8 @@ function loadNotes() {
       const container = document.getElementById('note-container');
       container.innerHTML = '';
 
-      // ✅ Ensure pinned notes appear first
-      notes.sort((a, b) => b.is_pinned - a.is_pinned);
+      // ✅ Sort by pinned first, then by order
+      notes.sort((a, b) => b.is_pinned - a.is_pinned || a.order - b.order);
 
       notes.forEach(note => {
           const noteElement = document.createElement('div');
@@ -238,6 +244,7 @@ function loadNotes() {
                     <h3 contenteditable="true" onblur="updateNote(${note.id}, this)">${note.title}</h3>
                     <button class="pin-btn" onclick="togglePin(${note.id}, this)">${pinIcon}</button>
                 </div>
+                
             `;
 
           if (note.is_checklist) {
@@ -270,6 +277,14 @@ function loadNotes() {
           content += `<button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>`;
 
           noteElement.innerHTML = content;
+          // ✅ Make non-pinned notes draggable
+          if (!note.is_pinned) {
+              noteElement.setAttribute("draggable", "true");
+              noteElement.addEventListener("dragstart", dragStart);
+              noteElement.addEventListener("dragover", dragOver);
+              noteElement.addEventListener("drop", drop);
+          }
+
           container.appendChild(noteElement);
       });
   });
@@ -423,6 +438,69 @@ function removeChecklistItem(button, noteId, itemId) {
   })
   .catch(error => console.error("Error deleting checklist item:", error));
 }
+
+
+let draggedNote = null;
+
+// ✅ Drag Start Function
+function dragStart(event) {
+    draggedNote = event.target;
+    event.dataTransfer.effectAllowed = "move";
+}
+
+// ✅ Drag Over Function (Prevents default to allow dropping)
+function dragOver(event) {
+    event.preventDefault();
+}
+
+// ✅ Drop Function (Moves note and saves order)
+function drop(event) {
+    event.preventDefault();
+    
+    if (!draggedNote || draggedNote === event.target || event.target.classList.contains("pinned")) return;
+
+    let container = document.getElementById("note-container");
+    let notes = Array.from(container.children);
+
+    let dropIndex = notes.indexOf(event.target);
+    let dragIndex = notes.indexOf(draggedNote);
+
+    if (dropIndex > dragIndex) {
+        container.insertBefore(draggedNote, event.target.nextSibling); // Move below
+    } else {
+        container.insertBefore(draggedNote, event.target); // Move above
+    }
+
+    saveNoteOrder(); // ✅ Save order to backend
+}
+
+// ✅ Save New Order After Drag-and-Drop
+function saveNoteOrder() {
+    const notes = Array.from(document.querySelectorAll('.note:not(.pinned)'));
+    const orderData = notes.map((note, index) => ({
+        id: note.dataset.noteId,
+        order: index // Save new order index
+    }));
+
+    fetch('/cards/api/notes/update-order/', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken()
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            console.log("Order saved successfully");
+        } else {
+            console.error("Error saving order:", data.message);
+        }
+    })
+    .catch(error => console.error("Error saving note order:", error));
+}
+
 
 // Load notes when the page loads
 document.addEventListener('DOMContentLoaded', loadNotes);

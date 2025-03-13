@@ -248,3 +248,20 @@ def toggle_pin(request, note_id):
     note.save()
 
     return JsonResponse({'status': 'success', 'is_pinned': note.is_pinned})
+
+
+@login_required
+@csrf_exempt
+@require_POST
+def update_order(request):
+    """Updates the order of non-pinned notes"""
+    try:
+        data = json.loads(request.body)
+        for item in data:
+            note = get_object_or_404(Note, id=item["id"], user=request.user)
+            if not note.is_pinned:  # ✅ Only update order for non-pinned notes
+                note.order = item["order"]
+                note.save()
+        return JsonResponse({"status": "success"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
