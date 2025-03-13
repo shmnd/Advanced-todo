@@ -2,44 +2,9 @@
 {% load static %}
 
 {% block content %}
-<style>
-  .c-dashboardInfo {
-    margin-bottom: 15px;
-  }
-  .c-dashboardInfo .wrap {
-    background: #ffffff;
-    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.1);
-    border-radius: 7px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    padding: 40px 25px 20px;
-    height: 100%;
-  }
-  .c-dashboardInfo__title,
-  .c-dashboardInfo__subInfo {
-    color: #6c6c6c;
-    font-size: 1.18em;
-  }
-  .c-dashboardInfo span {
-    display: block;
-  }
-  .c-dashboardInfo__count {
-    font-weight: 600;
-    font-size: 2.5em;
-    line-height: 64px;
-    color: #323c43;
-  }
-  .c-dashboardInfo .wrap:after {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 10px;
-    content: "";
-  }
-</style>
+
+
+
 
 <!--begin::Content wrapper-->
 <div class="d-flex flex-column flex-column-fluid">
@@ -152,6 +117,67 @@
   .delete-btn {
       background: red;
   }
+
+
+  .c-dashboardInfo {
+    margin-bottom: 15px;
+  }
+  .c-dashboardInfo .wrap {
+    background: #ffffff;
+    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 7px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 40px 25px 20px;
+    height: 100%;
+  }
+  .c-dashboardInfo__title,
+  .c-dashboardInfo__subInfo {
+    color: #6c6c6c;
+    font-size: 1.18em;
+  }
+  .c-dashboardInfo span {
+    display: block;
+  }
+  .c-dashboardInfo__count {
+    font-weight: 600;
+    font-size: 2.5em;
+    line-height: 64px;
+    color: #323c43;
+  }
+  .c-dashboardInfo .wrap:after {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    content: "";
+  }
+  .new-checklist-input {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    width: 70%;
+}
+
+.checklist-item button {
+    margin-left: 5px;/
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 2px;
+    background:rgb(200, 37, 37);
+}
+
+.checklist-item button:hover {
+    background:rgb(18, 77, 135);
+}
+
+
+
 </style>
 
 <script>
@@ -251,38 +277,65 @@ function deleteNote(noteId) {
 }
 
 // Function to add a checklist item inside a note
+// Function to add a checklist input box inside a note
 function addChecklistItem(button) {
   let noteElement = button.closest('.note');
   let noteId = noteElement.getAttribute('data-note-id');
   let checklistContainer = noteElement.querySelector('.checklist');
 
-  let itemText = prompt("Enter checklist item:");
-  if (!itemText) return;
+  // Check if an input box already exists
+  if (noteElement.querySelector(".new-checklist-input")) {
+      return;
+  }
 
-  fetch(`/cards/api/notes/${noteId}/items/`, {
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCSRFToken()
-      },
-      body: JSON.stringify({ text: itemText, is_completed: false })
-  })
-  .then(response => response.json())
-  .then(data => {
-      if (data.status === "created") {
-          let newItem = document.createElement("li");
-          newItem.classList.add("checklist-item");
-          newItem.setAttribute("data-item-id", data.id);
-          newItem.innerHTML = `
-              <input type="checkbox" onchange="toggleChecklistItem(${noteId}, ${data.id}, this)">
-              <input type="text" value="${itemText}" readonly>
-              <button onclick="removeChecklistItem(this, ${noteId}, ${data.id})">❌</button>
-          `;
-          checklistContainer.appendChild(newItem);
-      }
-  })
-  .catch(error => console.error("Error adding checklist item:", error));
+  // Create input box and add button
+  let inputDiv = document.createElement("div");
+  inputDiv.classList.add("checklist-item");
+
+  let inputBox = document.createElement("input");
+  inputBox.type = "text";
+  inputBox.classList.add("new-checklist-input");
+  inputBox.placeholder = "Enter checklist item...";
+
+  let addButton = document.createElement("button");
+  addButton.innerText = "Add";
+  addButton.onclick = function () {
+      let itemText = inputBox.value.trim();
+      if (!itemText) return;
+
+      fetch(`/cards/api/notes/${noteId}/items/`, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCSRFToken()
+          },
+          body: JSON.stringify({ text: itemText, is_completed: false })
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.status === "created") {
+              let newItem = document.createElement("li");
+              newItem.classList.add("checklist-item");
+              newItem.setAttribute("data-item-id", data.id);
+              newItem.innerHTML = `
+                  <input type="checkbox" onchange="toggleChecklistItem(${noteId}, ${data.id}, this)">
+                  <input type="text" value="${itemText}" readonly>
+                  <button onclick="removeChecklistItem(this, ${noteId}, ${data.id})">❌</button>
+              `;
+              checklistContainer.appendChild(newItem);
+              inputDiv.remove(); // Remove input box after adding item
+          }
+      })
+      .catch(error => console.error("Error adding checklist item:", error));
+  };
+
+  inputDiv.appendChild(inputBox);
+  inputDiv.appendChild(addButton);
+  checklistContainer.appendChild(inputDiv);
+
+  inputBox.focus(); // Focus input field for quick typing
 }
+
 
 // Function to toggle checklist item completion
 function toggleChecklistItem(noteId, itemId, checkbox) {
