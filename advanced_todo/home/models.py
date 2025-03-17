@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from authentication.models import Users
-from django.utils.timezone import now,timedelta
+from django.utils.timezone import localtime,timedelta
 
 # Common date fields
 class AbstractDateFieldMix(models.Model):
@@ -26,7 +26,7 @@ class WeeklyTask(AbstractDateFieldMix):
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     day = models.CharField(max_length=10, choices=DAYS_OF_WEEK,blank=True, null=True)
-    date = models.DateField(blank=True, null=True)  
+    date = models.DateField(default=localtime,blank=True, null=True)  
     time = models.TimeField(blank=True, null=True)
     task = models.CharField(max_length=255,blank=True, null=True)
 
