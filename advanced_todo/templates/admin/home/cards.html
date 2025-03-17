@@ -36,6 +36,31 @@
 
     <div id="note-container" class="d-flex flex-wrap gap-3 justify-content-center"></div>
   </div>
+
+  <!-- Reminder Modal -->
+  <div id="reminder-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Set Reminder</h3>
+        <label>Date & Time:</label>
+        <input type="datetime-local" id="reminder-time">
+        
+        <label>Repeat:</label>
+        <select id="repeat-option">
+            <option value="none">Does not repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+        </select>
+
+        <button onclick="saveReminder()">Set Reminder</button>
+        <button onclick="closeReminderModal()">Cancel</button>
+    </div>
+  </div>
+
+  <button id="remove-reminder-btn" onclick="removeReminder()" style="display: none;">Remove Reminder</button>
+
+
   
 </div>
 <!--end::Content wrapper-->
@@ -212,6 +237,51 @@
   cursor: grabbing;
 }
 
+.reminder-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s ease-in-out;
+}
+
+.reminder-btn:hover {
+  color: #007bff; /* Highlight on hover */
+}
+
+/* Style the modal background */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Style the modal content */
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px; /* Set width */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+}
+
+/* Close button for the modal */
+.modal-content button {
+    width: 100%; /* Make buttons full width */
+    margin-top: 10px;
+}
+
 
 </style>
 
@@ -240,11 +310,12 @@ function loadNotes() {
           let pinIcon = note.is_pinned ? '📌' : '📍';
 
           let content = `
-              <div class="note-header">
+                <div class="note-header">
                     <h3 contenteditable="true" onblur="updateNote(${note.id}, this)">${note.title}</h3>
                     <button class="pin-btn" onclick="togglePin(${note.id}, this)">${pinIcon}</button>
+                    <button class="reminder-btn" onclick="openReminderModal(${note.id})">⏰</button>  <!-- ✅ Always Show Reminder Button -->
                 </div>
-                
+                <div class="reminder-display" id="reminder-${note.id}"></div> <!-- ✅ Placeholder for Reminder -->
             `;
 
           if (note.is_checklist) {
@@ -501,6 +572,131 @@ function saveNoteOrder() {
     .catch(error => console.error("Error saving note order:", error));
 }
 
+// ----------------------------------------------------- REMINDER JS ----------------------------------------------------------------------
+
+let selectedNoteId = null;
+
+// Open Reminder Modal
+// Function to show the reminder modal for a specific note
+function openReminderModal(noteId) {
+  selectedNoteId = noteId;  // ✅ Assign correct note ID
+  document.getElementById("reminder-modal").style.display = "block";
+
+  // ✅ Clear previous values
+  document.getElementById("reminder-time").value = "";
+  document.getElementById("repeat-option").value = "none";
+
+  // ✅ Fetch existing reminder for the selected note (if any)
+  fetch(`/reminders/api/notes/${noteId}/get-reminder/`)
+      .then(response => response.json())
+      .then(data => {
+          if (data.reminder_time) {
+              document.getElementById("reminder-time").value = data.reminder_time;
+              document.getElementById("repeat-option").value = data.repeat;
+          }
+      })
+      .catch(error => console.error("Error fetching reminder:", error));
+}
+
+
+
+// Close Reminder Modal
+function closeReminderModal() {
+  document.getElementById("reminder-modal").style.display = "none";
+}
+
+// Function to save a reminder
+function saveReminder() {
+  if (!selectedNoteId) {
+      alert("Error: No note selected!");
+      return;
+  }
+
+  let reminderTime = document.getElementById("reminder-time").value;
+  let repeat = document.getElementById("repeat-option").value;
+
+  console.log("Saving Reminder:", { noteId: selectedNoteId, time: reminderTime, repeat: repeat });
+
+  fetch(`/reminders/api/notes/${selectedNoteId}/set-reminder/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
+      body: JSON.stringify({ reminder_time: reminderTime, repeat: repeat }),
+      "X-CSRFToken": getCSRFToken()
+  })
+  .then(response => response.json())
+  .then(data => {
+      console.log("Reminder Saved:", data);
+      alert(data.message);
+      closeReminderModal();
+  })
+  .catch(error => {
+      console.error("Error setting reminder:", error);
+      alert("Failed to set reminder.");
+  });
+}
+
+
+
+function checkReminders() {
+  fetch('/reminders/api/check-reminders/')
+  .then(response => response.json())
+  .then(data => {
+      if (data.reminders.length > 0) {
+          data.reminders.forEach(reminder => {
+              showNotification(reminder.title, reminder.description);
+          });
+      }
+  })
+  .catch(error => console.error("Error checking reminders:", error));
+}
+
+// Function to show notifications
+function showNotification(title, body) {
+  if (Notification.permission === "granted") {
+      new Notification(title, { body: body });
+  } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+              new Notification(title, { body: body });
+          } else {
+              alert(`🔔 Reminder: ${title}\n\n${body}`);  // ✅ Fallback for mobile users
+          }
+      });
+  } else {
+      alert(`🔔 Reminder: ${title}\n\n${body}`);  // ✅ Fallback for mobile users
+  }
+}
+
+// remove reminder
+function removeReminder() {
+  if (!confirm("Are you sure you want to remove this reminder?")) return;
+
+  fetch(`/cards/api/notes/${selectedNoteId}/remove-reminder/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() }
+  })
+  .then(response => response.json())
+  .then(data => {
+      alert(data.message);
+      closeReminderModal();
+      loadNotes(); // ✅ Refresh notes to remove the reminder visually
+  })
+  .catch(error => console.error("Error removing reminder:", error));
+}
+
+
+
+
+// Ask for notification permission on page load
+document.addEventListener("DOMContentLoaded", () => {
+  if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+  }
+  loadNotes();
+});
+
+// Check reminders every 30 seconds
+setInterval(checkReminders, 30000);
 
 // Load notes when the page loads
 document.addEventListener('DOMContentLoaded', loadNotes);

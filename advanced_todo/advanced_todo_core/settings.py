@@ -179,11 +179,5 @@ EMAIL_USE_SSL         = config('EMAIL_USE_SSLS', default=False, cast=bool)
 
 DEFAULT_FROM_EMAIL    = config('DEFAULT_FROM_EMAIL')
 
-
-# # Template settings
-# SECURE_HSTS_SECONDS = 31536000  # 1 year
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+TIME_ZONE = config('TIME_ZONE',default='Asia/Kolkata')
+USE_TZ = config('USE_TZ',default=True,cast=bool)

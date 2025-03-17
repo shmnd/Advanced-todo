@@ -24,8 +24,21 @@ urlpatterns = [
 
         path('api/notes/<int:note_id>/pin/', views.toggle_pin, name='toggle_pin'),
         path('api/notes/update-order/', views.update_order, name='update_order'),
+
+        
+
       
     ])),
+
+
+    re_path(r'^reminders/',include([
+        path('',views.reminder_page,name='reminder-page'),
+
+        path('api/notes/<int:note_id>/get-reminder/', views.get_reminder, name='get_reminder'),
+        path('api/notes/<int:note_id>/set-reminder/', views.set_reminder, name='set_reminder'),
+        path('api/check-reminders/', views.check_reminders, name='check_reminders'),
+
+    ]))
 ]
 
 

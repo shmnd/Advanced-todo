@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from authentication.models import Users
-from django.utils import timezone
+from django.utils.timezone import now,timedelta
 
 # Common date fields
 class AbstractDateFieldMix(models.Model):
@@ -69,3 +69,32 @@ class ChecklistItem(AbstractDateFieldMix):
 
     def __str__(self):
         return self.text
+    
+
+class Reminder(AbstractDateFieldMix):
+    REPEAT_CHOICE = [
+        ('none','Does not repeat'),
+        ('daily','Daily'),
+        ('weekly','Weekly'),
+        ('monthly','Monthly'),
+        ('yearly','Yearly'),
+    ]
+
+    user = models.ForeignKey(Users,on_delete=models.CASCADE)
+    note = models.ForeignKey(Note,on_delete=models.CASCADE)
+    reminder_time = models.DateTimeField(blank=True, null=True)
+    repeat = models.CharField(max_length=10,choices=REPEAT_CHOICE,default='none')
+
+
+
+    def get_next_reminder(self):
+        """Calculate the next reminder time based on repeat option."""
+        if self.repeat == "daily":
+            return self.reminder_time + timedelta(days=1)
+        elif self.repeat == "weekly":
+            return self.reminder_time + timedelta(weeks=1)
+        elif self.repeat == "monthly":
+            return self.reminder_time + timedelta(weeks=4)
+        elif self.repeat == "yearly":
+            return self.reminder_time + timedelta(days=365)
+        return None
