@@ -4,67 +4,6 @@
 {% block content %}
 
 
-
-
-<!--begin::Content wrapper-->
-<div class="d-flex flex-column flex-column-fluid">
-  <div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
-    <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
-      <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
-        <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">Dashboard</h1>
-        <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
-          <li class="breadcrumb-item text-muted">
-            <a href="" class="text-muted text-hover-primary">Home</a>
-          </li>
-          <li class="breadcrumb-item">
-            <span class="bullet bg-gray-400 w-5px h-2px"></span>
-          </li>
-          <li class="breadcrumb-item text-muted">Tasks</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- Google Keep-Style Notes Section -->
-  <div class="container">
-    
-    <div class="d-flex justify-content-center mb-3">
-      <input type="text" id="note-title" class="form-control w-50" placeholder="Enter a note...">
-      <input type="checkbox" id="checklist-toggle" class="ms-2"> 
-      <button class="btn btn-primary ms-2" onclick="addNote()">Add Note</button>
-    </div>
-
-    <div id="note-container" class="d-flex flex-wrap gap-3 justify-content-center"></div>
-  </div>
-
-  <!-- Reminder Modal -->
-  <div id="reminder-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <h3>Set Reminder</h3>
-        <label>Date & Time:</label>
-        <input type="datetime-local" id="reminder-time">
-        
-        <label>Repeat:</label>
-        <select id="repeat-option">
-            <option value="none">Does not repeat</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-        </select>
-
-        <button onclick="saveReminder()">Set Reminder</button>
-        <button onclick="closeReminderModal()">Cancel</button>
-    </div>
-  </div>
-
-  <button id="remove-reminder-btn" onclick="removeReminder()" style="display: none;">Remove Reminder</button>
-
-
-  
-</div>
-<!--end::Content wrapper-->
-
 <style>
   #note-container {
       display: flex;
@@ -284,6 +223,52 @@
 
 
 </style>
+
+
+
+
+<!--begin::Content wrapper-->
+<div class="d-flex flex-column flex-column-fluid">
+
+  <!-- Google Keep-Style Notes Section -->
+  <div class="container">
+    
+    <div class="d-flex justify-content-center mb-3">
+      <input type="text" id="note-title" class="form-control w-50" placeholder="Enter a note...">
+      <input type="checkbox" id="checklist-toggle" class="ms-2"> 
+      <button class="btn btn-primary ms-2" onclick="addNote()">Add Note</button>
+    </div>
+
+    <div id="note-container" class="d-flex flex-wrap gap-3 justify-content-center"></div>
+  </div>
+
+  <!-- Reminder Modal -->
+  <div id="reminder-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Set Reminder</h3>
+        <label>Date & Time:</label>
+        <input type="datetime-local" id="reminder-time">
+        
+        <label>Repeat:</label>
+        <select id="repeat-option">
+            <option value="none">Does not repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+        </select>
+
+        <button onclick="saveReminder()">Set Reminder</button>
+        <button onclick="closeReminderModal()">Cancel</button>
+    </div>
+  </div>
+
+  <button id="remove-reminder-btn" onclick="removeReminder()" style="display: none;">Remove Reminder</button>
+
+</div>
+<!--end::Content wrapper-->
+
+
 
 <script>
 // Function to retrieve CSRF token from cookies
