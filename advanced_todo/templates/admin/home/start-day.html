@@ -178,7 +178,6 @@
         const time = cell.getAttribute('data-time');
         const taskId = cell.getAttribute('data-task-id') || null;
     
-        console.log(`📝 Saving task "${taskText}" for ${day} at ${time}, Task ID: ${taskId}`);
     
         if (taskText) {
             fetch('task/api/add-task/', {
@@ -198,7 +197,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    console.log("✅ Task saved:", data);
                     cell.setAttribute('data-task-id', data.task_id);
                 } else {
                     console.error("❌ Failed to save task:", data);
@@ -206,7 +204,6 @@
             })
             .catch(error => console.error("❌ Error saving task:", error));
         } else if (taskId) {
-            console.log(`🗑️ Clearing task for ${day} at ${time}, Task ID: ${taskId}`);
             fetch(`task/api/delete-task/${taskId}/?type=weekly`, {
                 method: 'POST',
                 headers: {
@@ -214,7 +211,6 @@
                 }
             })
             .then(() => {
-                console.log("✅ Task deleted successfully.");
                 cell.removeAttribute('data-task-id');
             })
             .catch(error => console.error("❌ Error deleting task:", error));
@@ -225,7 +221,6 @@
         const input = document.getElementById(type + '-task-input');
         const taskText = input.value.trim();
     
-        console.log(`📝 Adding "${taskText}" to ${type} to-do list.`);
     
         if (taskText) {
             fetch('task/api/add-task/', {
@@ -243,7 +238,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    console.log("✅ To-Do task added:", data);
                     window.location.reload();
                 } else {
                     console.error("❌ Failed to add to-do task:", data);
@@ -259,7 +253,6 @@
     fetch('task/api/get-tasks/')
     .then(response => response.json())
     .then(data => {
-        console.log("✅ Fetched Tasks: ", data);  // Add this log
         const startTaskList = document.getElementById('start-tasks');
         const endTaskList = document.getElementById('end-tasks');
         startTaskList.innerHTML = '';
@@ -281,7 +274,6 @@
         data.weekly_tasks.forEach(task => {
             const taskTime = task.time; // Already in HH:MM format
             const dayColumn = document.querySelector(`td[data-day="${task.day.toLowerCase()}"][data-time="${taskTime}"]`);
-            console.log(`🟢 Looking for cell with day: ${task.day.toLowerCase()}, time: ${taskTime}`, dayColumn);
 
             if (dayColumn) {
                 dayColumn.textContent = task.task;
@@ -298,7 +290,6 @@
     function editTask(button, taskId) {
         const newTask = prompt("Edit your task:", button.parentElement.parentElement.textContent.trim());
         if (newTask) {
-            console.log(`📝 Attempting to update task ID ${taskId} with new text: "${newTask}"`);
             fetch(`task/api/update-task/${taskId}/?type=todo`, {
                 method: 'POST',
                 headers: {
@@ -310,7 +301,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'updated') {
-                    console.log("✅ Task updated successfully:", data);
                     window.location.reload();  // Reload to see the updated task
                 } else {
                     console.error("❌ Failed to update task:", data);
@@ -322,7 +312,6 @@
 
 // Delete Task Function
 function deleteTask(button, taskId) {
-    console.log(`🗑️ Attempting to delete task ID ${taskId}`);
     fetch(`task/api/delete-task/${taskId}/?type=todo`, {
         method: 'POST',
         headers: { 
@@ -332,7 +321,6 @@ function deleteTask(button, taskId) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'deleted') {
-            console.log("✅ Task deleted successfully:", data);
             window.location.reload();  // Reload to reflect the deletion
         } else {
             console.error("❌ Failed to delete task:", data);

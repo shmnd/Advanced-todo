@@ -600,7 +600,6 @@ function saveReminder() {
   let reminderTime = document.getElementById("reminder-time").value;
   let repeat = document.getElementById("repeat-option").value;
 
-  console.log("Saving Reminder:", { noteId: selectedNoteId, time: reminderTime, repeat: repeat });
 
   fetch(`/reminders/api/notes/${selectedNoteId}/set-reminder/`, {
       method: "POST",
@@ -610,7 +609,6 @@ function saveReminder() {
   })
   .then(response => response.json())
   .then(data => {
-      console.log("Reminder Saved:", data);
       alert(data.message);
       closeReminderModal();
   })

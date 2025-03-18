@@ -6,11 +6,14 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.conf import settings
 from advanced_todo_core.helpers.hash import Hash
-from django.http import JsonResponse,HttpResponse
+from django.http import JsonResponse
 from django.core.mail import send_mail
 import random
 from django.urls import reverse
 from home.models import WeeklyTask
+from django.utils import timezone
+from datetime import timedelta
+
 class UserRegisterView(View):
     def __init__(self):
         self.response_format = {"status_code": 101, "message": "", "error": ""}
@@ -51,7 +54,7 @@ class UserRegisterView(View):
             return JsonResponse({
                 "status_code": 100,
                 "message": "Signup successful! Redirecting to login...",
-                "redirect_url": login_url  # ✅ Include redirect URL
+                "redirect_url": login_url  
             }, status=200)
             
         except Exception as e:
@@ -88,8 +91,9 @@ class LoginView(View):
                 otp = random.randint(100000, 999999)
                 hash_otp = Hash.bcrypt({'key':str(otp)})
                 user.otp = hash_otp  
+                user.otp_expiry = timezone.now() + timedelta(minutes=3)  
                 user.is_verified = False  
-                user.save(update_fields=['otp', 'is_verified'])
+                user.save(update_fields=['otp', 'is_verified','otp_expiry'])
 
                 request.session['user_id'] = user.id
 
@@ -140,8 +144,13 @@ class OtpVerificationView(View):
         
         user = Users.objects.get(id=user_id)
 
+        if timezone.now() > user.otp_expiry:
+            messages.error(request, 'OTP has expired, please request a new one.')
+            return render(request,'admin/authentication/login.html')
+
         if Hash.verify(user.otp,otp):
             user.is_verified = True
+            user.otp = None 
             user.save()
             login(request,user)
             return redirect('home:startday')

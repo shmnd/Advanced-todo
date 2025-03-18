@@ -175,7 +175,6 @@ class NoteListView(View):
         return JsonResponse(notes_list, safe=False)
     
     def post(self, request):
-        print('heloooo')
         try:
             data = json.loads(request.body)
             note = Note.objects.create(
@@ -187,7 +186,6 @@ class NoteListView(View):
             return JsonResponse({'id': note.id, 'status': 'created'}, status=201)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
 
 
 @method_decorator(csrf_exempt, name='dispatch')

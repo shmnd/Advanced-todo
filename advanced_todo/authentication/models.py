@@ -35,20 +35,6 @@ class Users(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"  # Login via email
     REQUIRED_FIELDS = ["username"]
 
-    def set_otp(self,otp):
-        self.otp = otp
-        self.otp_expiry = timezone.now() + timedelta(minutes=3)
-
-    def is_valid_otp(self,otp):
-        if self.otp == otp and timezone.now() < self.otp_expiry:
-            return True
-        return False
-     
-    def clear_otp(self):
-        self.otp = None
-        self.otp_expiry = None
-        self.save()
-        
 
     def __str__(self):
         return self.email or self.username
