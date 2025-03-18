@@ -147,27 +147,35 @@ def note_page(request):
     """Render the Notes Page (cards.html)"""
     return render(request, 'admin/home/cards.html')
 
-
+ 
+@method_decorator(login_required, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
 class NoteListView(View):
     """Handles fetching and creating notes"""
 
     def get(self, request):
-        notes = Note.objects.filter(user=request.user).order_by('-is_pinned', '-id').values()
-        note_list = []
+        notes = Note.objects.filter(user=request.user).order_by('-is_pinned', '-id')
+        notes_list = []
+
         for note in notes:
-            note_list.append({
-                'id': note.id,
-                'title': note.title,
-                'description': note.description,
-                'is_pinned': note.is_pinned,
-                'is_checklist': note.is_checklist,
-                'order': note.order,
-                'reminder_time': note.reminder_time.strftime("%Y-%m-%dT%H:%M") if note.reminder_time else None,
-                'reminder_repeat': note.reminder_repeat
+            reminder = Reminder.objects.filter(note=note, user=request.user).first()
+            reminder_time = reminder.reminder_time.strftime('%Y-%m-%dT%H:%M') if reminder else None
+            repeat = reminder.repeat if reminder else "none"
+
+            notes_list.append({
+                "id": note.id,
+                "title": note.title,
+                "description": note.description,
+                "is_pinned": note.is_pinned,
+                "is_checklist": note.is_checklist,
+                "reminder_time": reminder_time,
+                "repeat": repeat
             })
 
+        return JsonResponse(notes_list, safe=False)
+    
     def post(self, request):
+        print('heloooo')
         try:
             data = json.loads(request.body)
             note = Note.objects.create(
@@ -179,8 +187,8 @@ class NoteListView(View):
             return JsonResponse({'id': note.id, 'status': 'created'}, status=201)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-        
-    
+
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class NoteDetailView(View):
@@ -421,27 +429,3 @@ def remove_reminders(request, reminder_id):
 # ------------------------------------------- note list -----------------------------------------------------------------
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class NoteListView(View):
-    """Handles fetching and creating notes"""
-
-    def get(self, request):
-        notes = Note.objects.filter(user=request.user).order_by('-is_pinned', '-id')
-        notes_list = []
-
-        for note in notes:
-            reminder = Reminder.objects.filter(note=note, user=request.user).first()
-            reminder_time = reminder.reminder_time.strftime('%Y-%m-%dT%H:%M') if reminder else None
-            repeat = reminder.repeat if reminder else "none"
-
-            notes_list.append({
-                "id": note.id,
-                "title": note.title,
-                "description": note.description,
-                "is_pinned": note.is_pinned,
-                "is_checklist": note.is_checklist,
-                "reminder_time": reminder_time,
-                "repeat": repeat
-            })
-
-        return JsonResponse(notes_list, safe=False)
