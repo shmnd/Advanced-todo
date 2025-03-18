@@ -397,24 +397,22 @@ def reminder_page(request):
 
 @login_required
 @csrf_exempt
-def remove_reminders(request, reminder_id):  # ✅ Change `note_id` to `reminder_id`
+def remove_reminders(request, reminder_id): 
     if request.method == "DELETE":
         try:
-            print(f"🚀 Attempting to delete reminder ID: {reminder_id}")  # ✅ Debugging log
 
-            # ✅ Ensure `reminder_id` exists
+            
             reminder = Reminder.objects.filter(id=reminder_id, user=request.user).first()
             if not reminder:
-                print(f"⚠️ Reminder ID {reminder_id} not found for user {request.user}")  # ✅ Debug log
+                
                 return JsonResponse({"message": "Reminder not found", "status": "error"}, status=404)
 
             reminder.delete()
-            print(f"✅ Successfully deleted reminder ID: {reminder_id}")
 
             return JsonResponse({"message": "Reminder deleted successfully!", "status": "success"})
         
         except Exception as e:
-            print(f"❌ Error deleting reminder: {e}")  # ✅ Debug log for errors
+
             return JsonResponse({"message": str(e), "status": "error"}, status=500)
 
     return JsonResponse({"message": "Invalid request method", "status": "error"}, status=405)

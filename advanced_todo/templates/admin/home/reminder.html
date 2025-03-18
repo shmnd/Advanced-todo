@@ -205,7 +205,6 @@ function removeReminder(reminderId) {
 
     if (!confirm("Are you sure you want to remove this reminder?")) return;
 
-    console.log(`Removing Reminder ID: ${reminderId}`);  
 
     fetch(`/reminders/api/remove-reminder/${reminderId}/`, {
         method: "DELETE",
@@ -219,7 +218,6 @@ function removeReminder(reminderId) {
         return response.json();
     })
     .then(data => {
-        console.log("API Response:", data);  // ✅ Log response for debugging
         alert(data.message);
         if (data.status === "success") {
             location.reload(); // ✅ Reload page after successful deletion
