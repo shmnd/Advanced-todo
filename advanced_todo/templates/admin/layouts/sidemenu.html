@@ -1,5 +1,4 @@
 {% load static %}
-{% comment %} {% load permission_tag %} {% endcomment %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -38,7 +37,6 @@
             <div class="menu menu-column menu-rounded menu-sub-indention px-3" id="#kt_app_sidebar_menu"
                 data-kt-menu="true" data-kt-menu-expand="false">
 
-                {% comment %} Day {% endcomment %}
 
                 <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'startday' %}active{% endif %}"
@@ -57,7 +55,6 @@
                 </div>
 
 
-                {% comment %} {% if request.user|check_permission:'auth.view_dashboards' %} {% endcomment %}
                 <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'note-page' %}active{% endif %}"
                         href="{% url 'home:note-page' %}">
@@ -75,7 +72,6 @@
                         <span class="menu-title">Tasks</span>
                     </a>
                 </div>
-                {% comment %} {%endif%} {% endcomment %}
 
 
                 <div class="menu-item">
@@ -90,6 +86,23 @@
                             </span>
                         </span>
                         <span class="menu-title">Reminder</span>
+                    </a>
+                </div>
+
+
+
+                <div class="menu-item">
+                    <a class="menu-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
+                        href="{% url 'home:admin_dashboard' %}">
+                        <span class="menu-icon">
+                            <span class="svg-icon svg-icon-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                                </svg>
+                            </span>
+                        </span>
+                        <span class="menu-title">Admin</span>
                     </a>
                 </div>
 

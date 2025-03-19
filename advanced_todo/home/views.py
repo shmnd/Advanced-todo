@@ -1,5 +1,5 @@
 from django.utils.timezone import now,localdate,make_aware,localtime
-from django.shortcuts import get_object_or_404, render, get_object_or_404
+from django.shortcuts import get_object_or_404, render, get_object_or_404,redirect
 from django.views import View
 from home.models import WeeklyTask, ToDoTask, Note, ChecklistItem,Reminder
 from authentication.models import Users 
@@ -15,6 +15,9 @@ from django.views.decorators.http import require_POST
 from django.utils.dateparse import parse_datetime
 from django.db import models
 from django.db.models import Q 
+from django.contrib import messages
+
+
 # Start Day View
 class StartDayView(LoginRequiredMixin, View):
     def __init__(self):
@@ -438,11 +441,11 @@ def remove_reminders(request, reminder_id):
 
 
 # ---------------------------------------------------- admin -------------------------------------------
-
 @login_required
 def admin_dashboard(request):
     if not request.user.is_staff:
-        return JsonResponse({"message": "Unauthorized"}, status=403)
+        messages.error(request, "Unauthorized User")
+        return redirect('home:startday')
 
     users = Users.objects.filter(is_staff=False)
     user_data = []  
@@ -454,7 +457,7 @@ def admin_dashboard(request):
             "tasks": user_tasks  
         })
 
-    return render(request, "admin/home/dashboard.html", { "user_data": user_data  })
+    return render(request, "admin/home/dashboard.html", { "user_data": user_data})
 
 
 @login_required

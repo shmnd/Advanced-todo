@@ -90,6 +90,7 @@
     }
 </style>
 
+
 <div class="schedule-container">
     <table class="schedule">
         <thead>
@@ -146,8 +147,8 @@
     
     function generateTimeSlots() {
         const tbody = document.getElementById('schedule-body');
-        let startTime = new Date(0, 0, 0, 8, 0);
-        const endTime = new Date(0, 0, 0, 20, 0);
+        let startTime = new Date(0, 0, 0, 0, 0);
+        const endTime = new Date(0, 0, 0, 24, 0);
     
         while (startTime < endTime) {
             const row = document.createElement('tr');

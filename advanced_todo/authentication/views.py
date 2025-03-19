@@ -153,6 +153,8 @@ class OtpVerificationView(View):
             user.otp = None 
             user.save()
             login(request,user)
+            if user.is_staff:
+                return redirect('home:admin_dashboard')
             return redirect('home:startday')
         else:
             messages.error(request,'Invalid Otp , Please try again later')
