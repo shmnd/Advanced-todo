@@ -334,29 +334,31 @@ def set_reminder(request, note_id):
             if not reminder_time_str:
                 return JsonResponse({"message": "Reminder time is required", "status": "error"}, status=400)
 
-            note = Note.objects.get(id=note_id, user=request.user)
+            note = Note.objects.get(id=note_id)
+            if note.user == request.user or note.assigned_to == request.user:
+                # ✅ Convert the string to a datetime object
+                reminder_time = parse_datetime(reminder_time_str)
+                if reminder_time is None:
+                    return JsonResponse({"message": "Invalid datetime format", "status": "error"}, status=400)
 
-            # ✅ Convert the string to a datetime object
-            reminder_time = parse_datetime(reminder_time_str)
-            if reminder_time is None:
-                return JsonResponse({"message": "Invalid datetime format", "status": "error"}, status=400)
+                # ✅ Ensure the datetime is timezone-aware
+                reminder_time = make_aware(reminder_time)
 
-            # ✅ Ensure the datetime is timezone-aware
-            reminder_time = make_aware(reminder_time)
+                # ✅ Create or update the reminder for this note
+                reminder, created = Reminder.objects.update_or_create(
+                    note=note,
+                    user=request.user,
+                    defaults={"reminder_time": reminder_time, "repeat": repeat}
+                )
 
-            # ✅ Create or update the reminder for this note
-            reminder, created = Reminder.objects.update_or_create(
-                note=note,
-                user=request.user,
-                defaults={"reminder_time": reminder_time, "repeat": repeat}
-            )
-
-            return JsonResponse({
-                "message": "Reminder set successfully!",
-                "status": "success",
-                "reminder_time": reminder.reminder_time.strftime('%Y-%m-%dT%H:%M'),
-                "repeat": reminder.repeat
-            })
+                return JsonResponse({
+                    "message": "Reminder set successfully!",
+                    "status": "success",
+                    "reminder_time": reminder.reminder_time.strftime('%Y-%m-%dT%H:%M'),
+                    "repeat": reminder.repeat
+                })
+            else:
+                return JsonResponse({'status': 'error', 'message': 'You do not have permission to delete this note.'}, status=403)
         except Note.DoesNotExist:
             return JsonResponse({"message": "Note not found", "status": "error"}, status=404)
         except Exception as e:
@@ -400,6 +402,7 @@ def check_reminders(request):
 @login_required
 def reminder_page(request):
     categorized_reminders = {
+        "Admin Assigned": Note.objects.filter(assigned_to=request.user).distinct(),
         "Daily": Note.objects.filter(user=request.user, reminder__repeat="daily").distinct(),
         "Weekly": Note.objects.filter(user=request.user, reminder__repeat="weekly").distinct(),
         "Monthly": Note.objects.filter(user=request.user, reminder__repeat="monthly").distinct(),
