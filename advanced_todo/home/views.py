@@ -1,14 +1,15 @@
+import json
+import csv
 from django.utils.timezone import now,localdate,make_aware,localtime
 from django.shortcuts import get_object_or_404, render, get_object_or_404,redirect
 from django.views import View
 from home.models import WeeklyTask, ToDoTask, Note, ChecklistItem,Reminder
 from authentication.models import Users 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponse
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-import json
 from django.utils.dateparse import parse_time
 from django.forms.models import model_to_dict
 from django.views.decorators.http import require_POST
@@ -441,10 +442,11 @@ def remove_reminders(request, reminder_id):
 
 
 # ---------------------------------------------------- admin -------------------------------------------
+
 @login_required
 def admin_dashboard(request):
     if not request.user.is_staff:
-        messages.error(request, "Unauthorized User")
+        messages.error(request, "Unauthorized Admin")
         return redirect('home:startday')
 
     users = Users.objects.filter(is_staff=False)
@@ -480,3 +482,27 @@ def assign_task(request):
         return JsonResponse({"message": "Task assigned successfully", "task_id": task.id})
 
     return JsonResponse({"message": "Invalid request"}, status=400)
+
+
+# --------------------- export csv weekly task ----------------------------------
+
+@login_required
+def export_weekly_tasks(request, user_id):
+
+    if not request.user.is_staff:
+        return redirect('home:startday')
+
+    user = get_object_or_404(Users, id=user_id)
+    tasks = WeeklyTask.objects.filter(user=user).order_by('date', 'time')
+
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{user.username}_weekly_tasks.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Day', 'Date', 'Time', 'Task'])  # CSV headers
+
+    for task in tasks:
+        writer.writerow([task.day.capitalize(), task.date, task.time, task.task])
+
+    return response

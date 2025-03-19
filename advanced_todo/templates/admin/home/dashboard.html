@@ -132,6 +132,9 @@ h2 {
                     {% endfor %}
                 </tbody>
             </table>
+            <a href="{% url 'home:export_weekly_tasks' data.user.id %}" class="btn btn-primary mt-2">
+                📥 Download Weekly Tasks
+            </a>
         </div>
     {% endfor %}
 
