@@ -160,7 +160,12 @@ class OtpVerificationView(View):
         
 
 def signout(request):
+    if request.user.is_staff:
+        logout(request)
+        return redirect('authentication:login')
+
     if WeeklyTask.objects.filter(user=request.user).count() == 0:
-        return redirect('home:startday') 
+        return redirect('home:startday')
+    
     logout(request)
     return redirect('authentication:login')

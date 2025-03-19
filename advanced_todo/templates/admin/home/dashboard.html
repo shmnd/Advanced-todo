@@ -1,0 +1,222 @@
+{% extends 'admin/layouts/apps.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+/* General Styling */
+.container {
+    max-width: 90%;
+    margin: auto;
+    padding: 20px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Success/Error Messages */
+#message-container {
+    text-align: center;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.alert {
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    width: 50%;
+    margin: auto;
+}
+
+.success {
+    background: #28a745;
+    color: white;
+}
+
+.error {
+    background: #dc3545;
+    color: white;
+}
+
+/* User Cards */
+.user-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* Task Table */
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.task-table th, .task-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.task-table th {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Assign Task Form */
+.assign-task {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+}
+
+.assign-task input, 
+.assign-task select, 
+.assign-task textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.assign-task button {
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.assign-task button:hover {
+    background: #0056b3;
+}
+</style>
+
+<div class="container">
+    <h2>Admin Dashboard</h2>
+
+    <!-- ✅ Message Container for Success/Error Messages -->
+    <div id="message-container"></div>
+
+    {% for data in user_data %}
+        <div class="user-card">
+            <h3>{{ data.user.username }} - {{ data.user.email }}</h3>
+
+            <h4>Tasks</h4>
+            <table class="task-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in data.tasks %}
+                        <tr>
+                            <td>{{ task.title }}</td>
+                            <td>{{ task.description }}</td>
+                            <td>{{ task.due_date }}</td>
+
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3">No tasks assigned.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+
+    <div class="assign-task">
+        <h3>Assign a Task</h3>
+        <form id="assign-task-form" action="{% url 'home:assign_task' %}" method="post">
+            {% csrf_token %}
+            <label>User:</label>
+            <select name="user_id">
+                {% for data in user_data %}
+                    <option value="{{ data.user.id }}">{{ data.user.username }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Title:</label>
+            <input type="text" name="title" required>
+
+            <label>Description:</label>
+            <textarea name="description" required></textarea>
+
+            <label>Due Date:</label>
+            <input type="datetime-local" name="due_date" required>
+
+            <button type="submit">Assign Task</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// ✅ Handle form submission via AJAX
+document.addEventListener("DOMContentLoaded", function() {
+    const assignTaskForm = document.getElementById("assign-task-form");
+    const messageContainer = document.getElementById("message-container");
+
+    if (assignTaskForm) {
+        assignTaskForm.addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            let formData = new FormData(assignTaskForm);
+
+            fetch(assignTaskForm.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": getCSRFToken() // Get CSRF token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showMessage(data.message, "success");
+
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showMessage("Something went wrong!", "error");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showMessage("Failed to assign task. Please try again.", "error");
+            });
+        });
+    }
+});
+
+// ✅ Function to show messages
+function showMessage(message, type) {
+    let messageDiv = document.getElementById("message-container");
+    if (!messageDiv) return;
+
+    messageDiv.innerHTML = `<div class="alert ${type}">${message}</div>`;
+    messageDiv.style.display = "block";
+
+    setTimeout(() => {
+        messageDiv.style.display = "none";
+    }, 3000);
+}
+
+// ✅ Function to get CSRF token
+function getCSRFToken() {
+    return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+}
+</script>
+
+{% endblock content %}

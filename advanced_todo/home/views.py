@@ -2,6 +2,7 @@ from django.utils.timezone import now,localdate,make_aware,localtime
 from django.shortcuts import get_object_or_404, render, get_object_or_404
 from django.views import View
 from home.models import WeeklyTask, ToDoTask, Note, ChecklistItem,Reminder
+from authentication.models import Users 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -12,7 +13,8 @@ from django.utils.dateparse import parse_time
 from django.forms.models import model_to_dict
 from django.views.decorators.http import require_POST
 from django.utils.dateparse import parse_datetime
-
+from django.db import models
+from django.db.models import Q 
 # Start Day View
 class StartDayView(LoginRequiredMixin, View):
     def __init__(self):
@@ -154,7 +156,7 @@ class NoteListView(View):
     """Handles fetching and creating notes"""
 
     def get(self, request):
-        notes = Note.objects.filter(user=request.user).order_by('-is_pinned', '-id')
+        notes = Note.objects.filter(models.Q(user=request.user) | models.Q(assigned_to=request.user)).order_by('-is_pinned', '-id')
         notes_list = []
 
         for note in notes:
@@ -205,9 +207,12 @@ class NoteDetailView(View):
 
     def delete(self, request, note_id):
         try:
-            note = get_object_or_404(Note, id=note_id, user=request.user)
-            note.delete()
-            return JsonResponse({'status': 'deleted'})
+            note = get_object_or_404(Note, id=note_id)
+            if note.user == request.user or note.assigned_to == request.user:
+                note.delete()
+                return JsonResponse({'status': 'deleted'})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'You do not have permission to delete this note.'}, status=403)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
@@ -262,13 +267,17 @@ class ChecklistItemView(View):
 @csrf_exempt  # Allow AJAX requests
 @require_POST  # Only allow POST requests
 def toggle_pin(request, note_id):
-    note = get_object_or_404(Note, id=note_id, user=request.user)
-
-    # Toggle pin status
-    note.is_pinned = not note.is_pinned
-    note.save()
-
-    return JsonResponse({'status': 'success', 'is_pinned': note.is_pinned})
+    try:
+        note = get_object_or_404(Note, id=note_id)
+        if note.user == request.user or note.assigned_to == request.user:
+            # Toggle pin status
+            note.is_pinned = not note.is_pinned
+            note.save()
+            return JsonResponse({'status': 'success', 'is_pinned': note.is_pinned})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'You do not have permission to delete this note.'}, status=403)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @login_required
@@ -406,7 +415,6 @@ def reminder_page(request):
 def remove_reminders(request, reminder_id): 
     if request.method == "DELETE":
         try:
-
             
             reminder = Reminder.objects.filter(id=reminder_id, user=request.user).first()
             if not reminder:
@@ -424,6 +432,45 @@ def remove_reminders(request, reminder_id):
     return JsonResponse({"message": "Invalid request method", "status": "error"}, status=405)
 
 
-# ------------------------------------------- note list -----------------------------------------------------------------
 
 
+# ---------------------------------------------------- admin -------------------------------------------
+
+@login_required
+def admin_dashboard(request):
+    if not request.user.is_staff:
+        return JsonResponse({"message": "Unauthorized"}, status=403)
+
+    users = Users.objects.filter(is_staff=False)
+    user_data = []  
+
+    for user in users:
+        user_tasks = Note.objects.filter(assigned_to=user)  # ✅ Fetch tasks for each user
+        user_data.append({
+            "user": user,
+            "tasks": user_tasks  
+        })
+
+    return render(request, "admin/home/dashboard.html", { "user_data": user_data  })
+
+
+@login_required
+def assign_task(request):
+    if request.method == "POST" and request.user.is_staff:
+        user_id = request.POST.get("user_id")
+        title = request.POST.get("title")
+        description = request.POST.get("description")
+        due_date = request.POST.get("due_date")
+
+        user = get_object_or_404(Users, id=user_id)
+        task = Note.objects.create(
+            user=request.user,  # The admin assigning the task
+            assigned_to=user,   # The user receiving the task
+            title=title,
+            description=description,
+            due_date=due_date,
+        )
+
+        return JsonResponse({"message": "Task assigned successfully", "task_id": task.id})
+
+    return JsonResponse({"message": "Invalid request"}, status=400)
