@@ -135,6 +135,9 @@ h2 {
             <a href="{% url 'home:export_weekly_tasks' data.user.id %}" class="btn btn-primary mt-2">
                 📥 Download Weekly Tasks
             </a>
+            <a href="{% url 'home:view_weekly_tasks' data.user.id %}" class="btn btn-primary mt-2">
+                📄 View Weekly Tasks
+            </a>
         </div>
     {% endfor %}
 

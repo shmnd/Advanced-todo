@@ -10,6 +10,8 @@ urlpatterns = [
     path("admins/dashboard/", login_required(views.admin_dashboard), name="admin_dashboard"),
     path("admins/assign-task/", login_required(views.assign_task), name="assign_task"),
     path('admins/export-weekly-tasks/<int:user_id>/', views.export_weekly_tasks, name='export_weekly_tasks'),
+    path('admins/view-weekly-tasks/<int:user_id>/', login_required(views.view_weekly_tasks), name='view_weekly_tasks'),
+
     
     re_path(r'^task/', include([
         path('api/get-tasks/', login_required(views.GetTasksView.as_view()), name='get_tasks'),

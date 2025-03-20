@@ -456,7 +456,7 @@ def admin_dashboard(request):
         user_tasks = Note.objects.filter(assigned_to=user)  # ✅ Fetch tasks for each user
         user_data.append({
             "user": user,
-            "tasks": user_tasks  
+            "tasks": user_tasks,
         })
 
     return render(request, "admin/home/dashboard.html", { "user_data": user_data})
@@ -506,3 +506,22 @@ def export_weekly_tasks(request, user_id):
         writer.writerow([task.day.capitalize(), task.date, task.time, task.task])
 
     return response
+
+
+
+@login_required
+def view_weekly_tasks(request,user_id):
+
+    """Fetch user's weekly tasks and render the start day page."""
+    weekly_tasks = WeeklyTask.objects.filter(user=user_id).order_by('date', 'time')
+
+    time_slots = [f"{hour:02}:{minute:02}" for hour in range(00, 24) for minute in (0, 30)] 
+
+    tasks_dict = {}
+    for task in weekly_tasks:
+        key = f"{task.day}_{task.time.strftime('%H:%M')}" if task.time else f"{task.day}"
+        tasks_dict[key] = task.task
+
+    weekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+
+    return render(request, "admin/dashboard/admin-view-weeklytask.html", {"weekly_tasks": tasks_dict,'weekdays':weekdays,"time_slots": time_slots,})
