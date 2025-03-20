@@ -8,7 +8,7 @@
     }
     .schedule-container {
         display: grid;
-        grid-template-columns: 3fr 1fr; /* Adjust ratio for better spacing */
+        grid-template-columns: 3fr; /* Adjust ratio for better spacing */
         gap: 10px;
         padding: 15px;
     }
@@ -36,58 +36,7 @@
         top: 0;
         z-index: 1;
     }
-    .todo-list {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 10px;
-        max-height: 700px;
-        overflow-y: auto;
-        margin-bottom: 20px;
-    }
-    .todo-list h4 {
-        margin-bottom: 10px;
-        text-align: center;
-        background-color: #f0f0f0;
-        padding: 5px;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-    .todo-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #f0f0f0;
-        padding: 5px;
-        margin-bottom: 5px;
-        border-radius: 3px;
-    }
-    .todo-item button {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        margin-left: 5px;
-    }
-    .todo-input {
-        width: calc(100% - 60px);
-        padding: 5px;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        margin-bottom: 10px;
-    }
-    button {
-        padding: 5px 10px;
-        border: none;
-        border-radius: 3px;
-        background-color: rgb(179, 30, 147);
-        color: #fff;
-        cursor: pointer;
-        margin-bottom: 10px;
-    }
-    button:hover {
-        background-color: rgb(1, 5, 10);
-    }
+    
 </style>
 
 
@@ -108,21 +57,6 @@
         </tbody>
     </table>
 
-    <div>
-        <div class="todo-list">
-            <h4>Start Day To-Do</h4>
-            <input type="text" id="start-task-input" class="todo-input" placeholder="Add a task">
-            <button onclick="addTask('start')">Add</button>
-            <ul id="start-tasks"></ul>
-        </div>
-
-        <div class="todo-list">
-            <h4>End Day To-Do</h4>
-            <input type="text" id="end-task-input" class="todo-input" placeholder="Add a task">
-            <button onclick="addTask('end')">Add</button>
-            <ul id="end-tasks"></ul>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -179,32 +113,58 @@
         const time = cell.getAttribute('data-time');
         const taskId = cell.getAttribute('data-task-id') || null;
     
-    
         if (taskText) {
-            fetch('task/api/add-task/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    task: taskText,
-                    day: day,
-                    time: time,
-                    type: 'weekly',
-                    task_id: taskId
+            if (taskId) {
+                // UPDATE existing task
+                fetch(`task/api/update-task/${taskId}/?type=weekly`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        task: taskText
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    cell.setAttribute('data-task-id', data.task_id);
-                } else {
-                    console.error("❌ Failed to save task:", data);
-                }
-            })
-            .catch(error => console.error("❌ Error saving task:", error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'updated') {
+                        console.log("✅ Task updated successfully");
+                    } else {
+                        console.error("❌ Failed to update task:", data);
+                        alert("⚠️ You cannot edit past tasks.");
+                        location.reload(); // Reload to prevent modification
+                    }
+                })
+                .catch(error => console.error("❌ Error updating task:", error));
+            } else {
+                // CREATE a new task
+                fetch('task/api/add-task/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        task: taskText,
+                        day: day,
+                        time: time,
+                        type: 'weekly'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        cell.setAttribute('data-task-id', data.task_id);
+                        console.log("✅ Task created successfully");
+                    } else {
+                        console.error("❌ Failed to save task:", data);
+                    }
+                })
+                .catch(error => console.error("❌ Error saving task:", error));
+            }
         } else if (taskId) {
+            // DELETE the task if the user clears the content
             fetch(`task/api/delete-task/${taskId}/?type=weekly`, {
                 method: 'POST',
                 headers: {
@@ -213,64 +173,20 @@
             })
             .then(() => {
                 cell.removeAttribute('data-task-id');
+                console.log("🗑️ Task deleted");
             })
             .catch(error => console.error("❌ Error deleting task:", error));
+            //alert("⚠️ You cannot delete past tasks.");
+            location.reload(); // Reload to prevent modification
         }
     }
     
-    function addTask(type) {
-        const input = document.getElementById(type + '-task-input');
-        const taskText = input.value.trim();
     
-    
-        if (taskText) {
-            fetch('task/api/add-task/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    task: taskText,
-                    task_type: type,
-                    type: 'todo'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    window.location.reload();
-                } else {
-                    console.error("❌ Failed to add to-do task:", data);
-                }
-            })
-            .catch(error => console.error("❌ Error adding to-do task:", error));
-        } else {
-            console.warn("⚠️ Task text is empty, not saving.");
-        }
-    }
 
 
     fetch('task/api/get-tasks/')
     .then(response => response.json())
     .then(data => {
-        const startTaskList = document.getElementById('start-tasks');
-        const endTaskList = document.getElementById('end-tasks');
-        startTaskList.innerHTML = '';
-        endTaskList.innerHTML = '';
-
-        data.todo_tasks.forEach(task => {
-            const li = document.createElement('li');
-            li.className = 'todo-item';
-            li.innerHTML = `
-                ${task.task}
-                <span>
-                    <button onclick="editTask(this, ${task.id})">✏️</button>
-                    <button onclick="deleteTask(this, ${task.id})">🗑️</button>
-                </span>
-            `;
-            task.task_type === 'start' ? startTaskList.appendChild(li) : endTaskList.appendChild(li);
-        });
 
         data.weekly_tasks.forEach(task => {
             const taskTime = task.time; // Already in HH:MM format
@@ -286,53 +202,6 @@
         });
     })
     .catch(error => console.error("❌ Error fetching tasks:", error));
-
-    // Edit Task Function
-    function editTask(button, taskId) {
-        const newTask = prompt("Edit your task:", button.parentElement.parentElement.textContent.trim());
-        if (newTask) {
-            fetch(`task/api/update-task/${taskId}/?type=todo`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ task: newTask })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'updated') {
-                    window.location.reload();  // Reload to see the updated task
-                } else {
-                    console.error("❌ Failed to update task:", data);
-                }
-            })
-            .catch(error => console.error("❌ Error updating task:", error));
-        }
-    }
-
-// Delete Task Function
-function deleteTask(button, taskId) {
-    fetch(`task/api/delete-task/${taskId}/?type=todo`, {
-        method: 'POST',
-        headers: { 
-            'X-CSRFToken': '{{ csrf_token }}' 
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'deleted') {
-            window.location.reload();  // Reload to reflect the deletion
-        } else {
-            console.error("❌ Failed to delete task:", data);
-        }
-    })
-    .catch(error => console.error("❌ Error deleting task:", error));
-}
-
-
-
-
     
 </script>
 {% endblock content %}

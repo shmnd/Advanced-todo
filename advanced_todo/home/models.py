@@ -33,20 +33,6 @@ class WeeklyTask(AbstractDateFieldMix):
     def __str__(self):
         return f"{self.day.capitalize()} - {self.time} - {self.task}"
 
-# Task model for Start and End Day To-Do Lists
-class ToDoTask(AbstractDateFieldMix):
-    TASK_TYPE = [
-        ('start', 'Start Day'),
-        ('end', 'End Day'),
-    ]
-
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    task_type = models.CharField(max_length=5, choices=TASK_TYPE,blank=True, null=True)
-    task = models.CharField(max_length=255,blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.get_task_type_display()} - {self.task}"
-
 class Note(AbstractDateFieldMix):
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="notes")
     title = models.CharField(max_length=255)

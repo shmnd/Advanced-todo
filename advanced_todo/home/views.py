@@ -3,7 +3,7 @@ import csv
 from django.utils.timezone import now,localdate,make_aware,localtime
 from django.shortcuts import get_object_or_404, render, get_object_or_404,redirect
 from django.views import View
-from home.models import WeeklyTask, ToDoTask, Note, ChecklistItem,Reminder
+from home.models import WeeklyTask, Note, ChecklistItem,Reminder
 from authentication.models import Users 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse,HttpResponse
@@ -26,94 +26,76 @@ class StartDayView(LoginRequiredMixin, View):
         self.context['title'] = 'Start Day'
 
     def get(self, request, *args, **kwargs):
-        # Fetch weekly tasks and to-do tasks
-        weekly_tasks = WeeklyTask.objects.filter(user=request.user).values()
-        todo_tasks = ToDoTask.objects.filter(user=request.user).values()
+        try:
+            # Fetch weekly tasks and to-do tasks
+            weekly_tasks = WeeklyTask.objects.filter(user=request.user).values()
 
-        # Pass tasks to context
-        self.context['weekly_tasks'] = list(weekly_tasks)
-        self.context['todo_tasks'] = list(todo_tasks)
+            # Pass tasks to context
+            self.context['weekly_tasks'] = list(weekly_tasks)
 
-        # Render the template with context
-        return render(request, "admin/home/start-day.html", self.context)
+            # Render the template with context
+            return render(request, "admin/home/start-day.html", self.context)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 # API: Get Tasks
 @method_decorator(csrf_exempt, name='dispatch')
 class GetTasksView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        user = request.user
+        try:
+            user = request.user
 
-        # Convert `time` field to string in `HH:MM` format
-        weekly_tasks = WeeklyTask.objects.filter(user=user)
-        weekly_tasks_list = [
-            {**model_to_dict(task), 'time': task.time.strftime('%H:%M')}
-            for task in weekly_tasks
-        ]
-
-        # Fetch To-Do tasks as well
-        todo_tasks = ToDoTask.objects.filter(user=user).values()
-        
-        return JsonResponse({
-            'weekly_tasks': weekly_tasks_list,
-            'todo_tasks': list(todo_tasks),
-        })
+            # Convert `time` field to string in `HH:MM` format
+            weekly_tasks = WeeklyTask.objects.filter(user=user)
+            weekly_tasks_list = [
+                {**model_to_dict(task), 'time': task.time.strftime('%H:%M')}
+                for task in weekly_tasks
+            ]
+            
+            return JsonResponse({
+                'weekly_tasks': weekly_tasks_list,
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 # API: Add Task
 @method_decorator(csrf_exempt, name='dispatch')
 class AddTaskView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        user = request.user
+        try:
+            data = json.loads(request.body)
+            user = request.user
 
-        # Check task type
-        if data['type'] == 'weekly':
-            if 'task_id' in data and data['task_id']:
-                task = WeeklyTask.objects.filter(id=data['task_id']).first()
+            # Check task type
+            if data['type'] == 'weekly':
+                if 'task_id' in data and data['task_id']:
+                    task = WeeklyTask.objects.filter(id=data['task_id']).first()
 
-                if task and localdate(task.created_at) == localdate():
-                    # Update the existing task only if it was created today
-                    task.task = data['task']
-                    task.save()
+                    if task and localdate(task.created_at) == localdate():
+                        # Update the existing task only if it was created today
+                        task.task = data['task']
+                        task.save()
+                    else:
+                        # Create a new task if the date is different or task_id is invalid
+                        task = WeeklyTask.objects.create(
+                            user=user,
+                            day=data['day'],
+                            time=parse_time(data['time']),
+                            task=data['task']
+                        )
                 else:
-                    # Create a new task if the date is different or task_id is invalid
+                    # Create a new task if no task_id is provided
                     task = WeeklyTask.objects.create(
                         user=user,
                         day=data['day'],
                         time=parse_time(data['time']),
                         task=data['task']
                     )
-            else:
-                # Create a new task if no task_id is provided
-                task = WeeklyTask.objects.create(
-                    user=user,
-                    day=data['day'],
-                    time=parse_time(data['time']),
-                    task=data['task']
-                )
-        else:
-            # Handle To-Do tasks similarly
-            if 'task_id' in data and data['task_id']:
-                task = ToDoTask.objects.filter(id=data['task_id']).first()
-
-                if task and localdate(task.created_at) == localdate():
-                    task.task = data['task']
-                    task.save()
-                else:
-                    task = ToDoTask.objects.create(
-                        user=user,
-                        task_type=data['task_type'],
-                        task=data['task']
-                    )
-            else:
-                task = ToDoTask.objects.create(
-                    user=user,
-                    task_type=data['task_type'],
-                    task=data['task']
-                )
-
-        # Return JSON response with task ID
-        return JsonResponse({'status': 'success', 'task_id': task.id})
+            # Return JSON response with task ID
+            return JsonResponse({'status': 'success', 'task_id': task.id})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 
@@ -121,28 +103,38 @@ class AddTaskView(LoginRequiredMixin, View):
 @method_decorator(csrf_exempt, name='dispatch')
 class DeleteTaskView(LoginRequiredMixin, View):
     def post(self, request, task_id, *args, **kwargs):
-        task_type = request.GET.get('type')
-        if task_type == 'weekly':
-            WeeklyTask.objects.filter(id=task_id).delete()
-        else:
-            ToDoTask.objects.filter(id=task_id).delete()
-        return JsonResponse({'status': 'deleted'})
+        try:
+            task_type = request.GET.get('type')
+            if task_type == 'weekly':
+                task = get_object_or_404(WeeklyTask, id=task_id, user=request.user)
+
+                if task.date < localdate():
+                    return JsonResponse({'status': 'error', 'message': 'Cannot delete past tasks'}, status=403)
+                
+                task.delete()
+            return JsonResponse({'status': 'deleted'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 # API: Update Task
 @method_decorator(csrf_exempt, name='dispatch')
 class UpdateTaskView(LoginRequiredMixin, View):
     def post(self, request, task_id, *args, **kwargs):
-        data = json.loads(request.body)
-        task_type = request.GET.get('type')
-        if task_type == 'weekly':
-            task = get_object_or_404(WeeklyTask, id=task_id)
-            task.task = data['task']
-            task.save()
-        else:
-            task = get_object_or_404(ToDoTask, id=task_id)
-            task.task = data['task']
-            task.save()
-        return JsonResponse({'status': 'updated'})
+        try:
+            data = json.loads(request.body)
+            task_type = request.GET.get('type')
+            
+            if task_type == 'weekly':
+                task = get_object_or_404(WeeklyTask, id=task_id, user=request.user)
+
+                if task.date != localdate():
+                    return JsonResponse({'status': 'error', 'message': 'Cannot edit past tasks'}, status=403)
+
+                task.task = data['task']
+                task.save()
+            return JsonResponse({'status': 'updated'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
 
 # ---------------------------------------------------------------- Notes -----------------------------------------------------------------------------
