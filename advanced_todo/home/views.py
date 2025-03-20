@@ -160,7 +160,7 @@ class NoteListView(View):
     """Handles fetching and creating notes"""
 
     def get(self, request):
-        notes = Note.objects.filter(models.Q(user=request.user) | models.Q(assigned_to=request.user)).order_by('-is_pinned', '-id')
+        notes = Note.objects.filter(models.Q(user=request.user) | models.Q(assigned_to=request.user)).order_by('-is_pinned', 'order')
         notes_list = []
 
         for note in notes:
