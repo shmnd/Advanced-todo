@@ -11,6 +11,8 @@ urlpatterns = [
     path("admins/assign-task/", login_required(views.assign_task), name="assign_task"),
     path('admins/export-weekly-tasks/<int:user_id>/', views.export_weekly_tasks, name='export_weekly_tasks'),
     path('admins/view-weekly-tasks/<int:user_id>/', login_required(views.view_weekly_tasks), name='view_weekly_tasks'),
+    # admin task delete
+    path("delete-task/", login_required(views.delete_task), name="delete_task"),
 
     
     re_path(r'^task/', include([

@@ -476,6 +476,23 @@ def assign_task(request):
     return JsonResponse({"message": "Invalid request"}, status=400)
 
 
+
+@login_required
+@csrf_exempt
+def delete_task(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            task_id = data.get("task_id")
+
+            task = Note.objects.get(id=task_id)
+            task.delete()
+            return JsonResponse({"success": True})
+        except Note.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Note not found"})
+    return JsonResponse({"success": False, "error": "Invalid request"})
+
+
 # --------------------- export csv weekly task ----------------------------------
 
 @login_required
