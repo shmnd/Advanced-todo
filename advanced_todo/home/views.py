@@ -69,29 +69,12 @@ class AddTaskView(LoginRequiredMixin, View):
 
             # Check task type
             if data['type'] == 'weekly':
-                if 'task_id' in data and data['task_id']:
-                    task = WeeklyTask.objects.filter(id=data['task_id']).first()
-
-                    if task and localdate(task.created_at) == localdate():
-                        # Update the existing task only if it was created today
-                        task.task = data['task']
-                        task.save()
-                    else:
-                        # Create a new task if the date is different or task_id is invalid
-                        task = WeeklyTask.objects.create(
-                            user=user,
-                            day=data['day'],
-                            time=parse_time(data['time']),
-                            task=data['task']
-                        )
-                else:
-                    # Create a new task if no task_id is provided
-                    task = WeeklyTask.objects.create(
-                        user=user,
-                        day=data['day'],
-                        time=parse_time(data['time']),
-                        task=data['task']
-                    )
+                task = WeeklyTask.objects.create(
+                    user=user,
+                    day=data['day'],
+                    time=parse_time(data['time']),
+                    task=data['task']
+                )
             # Return JSON response with task ID
             return JsonResponse({'status': 'success', 'task_id': task.id})
         except Exception as e:
