@@ -102,6 +102,14 @@
 	<!--end::Vendors Javascript-->
 	<!--end::Javascript-->
 
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.querySelector('#kt_app_sidebar_toggle');
+			if (toggle) {
+				toggle.click();  // ✅ Force Metronic to handle the toggle (minimize sidebar)
+			}
+		});
+	</script>
 
 	<script>
 		$.ajaxSetup({
