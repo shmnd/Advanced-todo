@@ -424,8 +424,9 @@ def admin_dashboard(request):
         messages.error(request, "Unauthorized User")
         return redirect('home:startday')
     
-    users = Users.objects.filter(is_staff=False).exclude(id=request.user.id)
-    # users = Users.objects.all()
+    users = Users.objects.filter(is_staff=False).exclude(id=request.user.id) #except that user
+    #users = Users.objects.filter(is_staff=False).exclude(is_staff=True) #except admins
+    # users = Users.objects.all()  # everyone
 
     user_data = []  
 

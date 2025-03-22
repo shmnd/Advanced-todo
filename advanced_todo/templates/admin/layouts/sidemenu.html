@@ -54,8 +54,11 @@
                     </a>
                 </div>
 
+                
+{% comment %} ----------------------------------------------------------- Tasks ----------------------------------------------------------------------- {% endcomment %}
 
-                <div class="menu-item">
+
+                {% comment %} <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'note-page' %}active{% endif %}"
                         href="{% url 'home:note-page' %}">
                         <span class="menu-icon">
@@ -71,10 +74,11 @@
                         </span>
                         <span class="menu-title">Tasks</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
+{% comment %} ----------------------------------------------------------- Reminder ----------------------------------------------------------------------- {% endcomment %}
 
-                <div class="menu-item">
+                {% comment %} <div class="menu-item">
                     <a class="menu-link {% if request.resolver_match.url_name == 'reminder-page' %}active{% endif %}"
                         href="{% url 'home:reminder-page' %}">
                         <span class="menu-icon">
@@ -87,7 +91,7 @@
                         </span>
                         <span class="menu-title">Reminder</span>
                     </a>
-                </div>
+                </div> {% endcomment %}
 
 
 

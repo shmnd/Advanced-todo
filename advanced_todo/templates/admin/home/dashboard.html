@@ -125,7 +125,7 @@ h2 {
         <div class="user-card">
             <h3>{{ data.user.username }} - {{ data.user.email }}</h3>
 
-            <h4>Tasks</h4>
+            {% comment %} <h4>Tasks</h4>
             <table class="task-table">
                 <thead>
                     <tr>
@@ -149,7 +149,7 @@ h2 {
                         <tr><td colspan="3">No tasks assigned.</td></tr>
                     {% endfor %}
                 </tbody>
-            </table>
+            </table> {% endcomment %}
             <a href="{% url 'home:export_weekly_tasks' data.user.id %}" class="btn btn-primary mt-2">
                 📥 Download Weekly Tasks
             </a>
@@ -159,7 +159,7 @@ h2 {
         </div>
     {% endfor %}
 
-    <div class="assign-task">
+    {% comment %} <div class="assign-task">
         <h3>Assign a Task</h3>
         <form id="assign-task-form" action="{% url 'home:assign_task' %}" method="post">
             {% csrf_token %}
@@ -178,7 +178,7 @@ h2 {
 
             <button type="submit">Assign Task</button>
         </form>
-    </div>
+    </div> {% endcomment %}
 </div>
 
 <script>
