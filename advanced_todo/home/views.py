@@ -381,7 +381,7 @@ def check_reminders(request):
 @login_required
 def reminder_page(request):
     categorized_reminders = {
-        "Admin Assigned": Note.objects.filter(assigned_to=request.user).distinct(),
+        "Assigned": Note.objects.filter(assigned_to=request.user).distinct(),
         "Daily": Note.objects.filter(user=request.user, reminder__repeat="daily").distinct(),
         "Weekly": Note.objects.filter(user=request.user, reminder__repeat="weekly").distinct(),
         "Monthly": Note.objects.filter(user=request.user, reminder__repeat="monthly").distinct(),
@@ -420,11 +420,13 @@ def remove_reminders(request, reminder_id):
 
 @login_required
 def admin_dashboard(request):
-    if not request.user.is_staff:
-        messages.error(request, "Unauthorized Admin")
+    if not (request.user.is_staff or request.user.is_verified):
+        messages.error(request, "Unauthorized User")
         return redirect('home:startday')
+    
+    users = Users.objects.filter(is_staff=False).exclude(id=request.user.id)
+    # users = Users.objects.all()
 
-    users = Users.objects.filter(is_staff=False)
     user_data = []  
 
     for user in users:
@@ -439,7 +441,7 @@ def admin_dashboard(request):
 
 @login_required
 def assign_task(request):
-    if request.method == "POST" and request.user.is_staff:
+    if request.method == "POST" and request.user.is_staff or request.user.is_verified:
         user_id = request.POST.get("user_id")
         title = request.POST.get("title")
         description = request.POST.get("description")
@@ -469,8 +471,10 @@ def delete_task(request):
             task_id = data.get("task_id")
 
             task = Note.objects.get(id=task_id)
-            task.delete()
-            return JsonResponse({"success": True})
+            if task.user_id == request.user.id or request.user.is_staff:
+                task.delete()
+                return JsonResponse({"success": True})
+            return JsonResponse({"success": False, "error": "You do not have permission to delete this task."})
         except Note.DoesNotExist:
             return JsonResponse({"success": False, "error": "Note not found"})
     return JsonResponse({"success": False, "error": "Invalid request"})

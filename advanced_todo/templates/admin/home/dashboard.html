@@ -116,7 +116,7 @@ h2 {
 </style>
 
 <div class="container">
-    <h2>Admin Dashboard</h2>
+    <h2>Dashboard</h2>
 
     <!-- ✅ Message Container for Success/Error Messages -->
     <div id="message-container"></div>
@@ -200,9 +200,15 @@ h2 {
             if (data.success) {
                 showMessage("Task deleted successfully!", "success");
                 setTimeout(() => window.location.reload(), 2000);
+            } else if (data.error) {
+                showMessage(data.error, "error"); // Show specific error message from server
             } else {
                 showMessage("Failed to delete task.", "error");
             }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            showMessage("Something went wrong.", "error");
         });
     }
         
