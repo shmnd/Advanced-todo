@@ -5,22 +5,44 @@
 {% block content %}
 <style>
     /* General Table Styling */
-    .schedule {
-        border-collapse: collapse;
-        width: 120%;
-        background-color: #fff;
-        border: 1px solid #ddd;
+
+    .schedule-container {
         overflow-x: auto;
     }
+    .schedule {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 1500px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+    }
+    
     .schedule th, .schedule td {
         border: 1px solid #ddd;
         padding: 6px;
         text-align: center;
         white-space: nowrap;
     }
+
+    .schedule th:first-child,
+    .schedule td:first-child {
+        position: sticky;
+        left: 0;
+        background: #f9f9f9;
+        z-index: 2;
+        font-weight: bold;
+        color: #333;
+        min-width: 200px;
+    }
+
     .schedule th {
         background-color: #f0f0f0;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+
     }
+    
     .has-task {
         background-color: #fffbcc; /* Highlight task cells */
     }
@@ -31,8 +53,8 @@
         <thead>
             <tr>
                 <th>Time</th>
-                {% for day in weekdays %}
-                <th>{{ day|capfirst }}<br><span class="date-label" id="{{ day }}-date"></span></th>
+                {% for day in date_range %}
+                <th>{{ day.label }}<br><span class="date-label">{{ day.date }}</span></th>
                 {% endfor %}
             </tr>
         </thead>
@@ -40,9 +62,9 @@
             {% for time in time_slots %}
             <tr>
                 <td>{{ time }}</td>
-                {% for day in weekdays %}
-                {% with day_key=day|lower|add:"_"|add:time %}
-                <td class="{% if weekly_tasks|get_key:day_key %}has-task{% endif %}" id="{{ day_key }}">
+                {% for day in date_range %}
+                {% with day_key=day.date|stringformat:"s"|add:"_"|add:time %}
+                <td class="{% if weekly_tasks|get_key:day_key %}has-task{% endif %}"> <!-- id="{{ day_key }}"> -->
                     {{ weekly_tasks|get_key:day_key }}
                 </td>
                 {% endwith %} 

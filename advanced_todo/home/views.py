@@ -17,7 +17,8 @@ from django.utils.dateparse import parse_datetime
 from django.db import models
 from django.db.models import Q 
 from django.contrib import messages
-
+from datetime import timedelta
+from django.utils import timezone
 
 # Start Day View
 class StartDayView(LoginRequiredMixin, View):
@@ -424,8 +425,8 @@ def admin_dashboard(request):
         messages.error(request, "Unauthorized User")
         return redirect('home:startday')
     
-    users = Users.objects.filter(is_staff=False).exclude(id=request.user.id) #except that user
-    #users = Users.objects.filter(is_staff=False).exclude(is_staff=True) #except admins
+    # users = Users.objects.filter(is_staff=False).exclude(id=request.user.id) #except that user
+    users = Users.objects.filter(is_staff=False).exclude(is_staff=True) #except admins
     # users = Users.objects.all()  # everyone
 
     user_data = []  
@@ -510,15 +511,42 @@ def export_weekly_tasks(request, user_id):
 def view_weekly_tasks(request,user_id):
 
     """Fetch user's weekly tasks and render the start day page."""
-    weekly_tasks = WeeklyTask.objects.filter(user=user_id).order_by('date', 'time')
+    user = get_object_or_404(Users, id=user_id)
+    weekly_tasks = WeeklyTask.objects.filter(user=user).order_by('date', 'time')
+
+    if not weekly_tasks.exists():
+        return render(request, "admin/dashboard/admin-view-weeklytask.html", {
+            "weekly_tasks": {},
+            "time_slots": [],
+            "date_range": [],
+        })
 
     time_slots = [f"{hour:02}:{minute:02}" for hour in range(00, 24) for minute in (0, 30)] 
 
+    start_date = user.date_joined.date()
+    last_task = weekly_tasks.last()
+
+    if last_task and last_task.date:
+        end_date = max(last_task.date, timezone.now().date())  # ensure it includes today
+    else:
+        end_date = timezone.now().date()
+
+    # Generate list of dates
+    date_range = []
+    current = start_date
+    while current <= end_date:
+        date_range.append({
+            'date': current,
+            'label': current.strftime("%A"),  # Weekday name
+        })
+        current += timedelta(days=1)
+
+    # Build task dict with keys like '2024-03-24_08:00'
     tasks_dict = {}
     for task in weekly_tasks:
-        key = f"{task.day}_{task.time.strftime('%H:%M')}" if task.time else f"{task.day}"
-        tasks_dict[key] = task.task
+        if task.date and task.time:
+            key = f"{task.date}_{task.time.strftime('%H:%M')}" if task.time else f"{task.day}"
+            tasks_dict[key] = task.task
 
-    weekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
-    return render(request, "admin/dashboard/admin-view-weeklytask.html", {"weekly_tasks": tasks_dict,'weekdays':weekdays,"time_slots": time_slots,})
+    return render(request, "admin/dashboard/admin-view-weeklytask.html", {"weekly_tasks": tasks_dict,'date_range':date_range,"time_slots": time_slots,})
