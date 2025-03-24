@@ -198,9 +198,19 @@
         // New week, reset UI (but keep backend data untouched)
         localStorage.setItem('lastViewedMonday', currentMonday);
         console.log("🆕 New week detected. UI schedule cleared.");
+
+        // Clear all task cells
+        const taskCells = document.querySelectorAll('td[data-day]');
+        taskCells.forEach(cell => {
+            cell.textContent = '';  // Clear visible content
+            cell.removeAttribute('data-task-id');  // Remove task id
+            cell.classList.remove('has-task');  // Optional: remove styling class
+        });
+
+        // Don't touch backend. Just clear the UI.
     } else {
         // Same week, load tasks from backend
-        fetch('task/api/get-tasks/')
+        fetch(`task/api/get-tasks/?monday=${currentMonday}`)
         .then(response => response.json())
         .then(data => {
 

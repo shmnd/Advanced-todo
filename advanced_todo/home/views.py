@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_time
 from django.forms.models import model_to_dict
 from django.views.decorators.http import require_POST
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_datetime,parse_date
 from django.db import models
 from django.db.models import Q 
 from django.contrib import messages
@@ -46,9 +46,18 @@ class GetTasksView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         try:
             user = request.user
+            monday_str = request.GET.get('monday')
 
-            # Convert `time` field to string in `HH:MM` format
-            weekly_tasks = WeeklyTask.objects.filter(user=user)
+            if monday_str:
+                monday = parse_date(monday_str)
+                if monday:
+                    saturday = monday + timedelta(days=5)
+                    weekly_tasks = WeeklyTask.objects.filter(user=user, date__range=(monday, saturday))
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'Invalid Monday date'}, status=400)
+            else:
+                weekly_tasks = WeeklyTask.objects.filter(user=user)
+
             weekly_tasks_list = [
                 {**model_to_dict(task), 'time': task.time.strftime('%H:%M')}
                 for task in weekly_tasks
