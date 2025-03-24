@@ -76,6 +76,15 @@
             document.getElementById(`${day}-date`).innerText = date.toLocaleDateString('en-US', dateOptions);
         });
     }
+
+    function getFormattedMondayDate() {
+        const currentDate = new Date();
+        const currentDay = currentDate.getDay();
+        const monday = new Date(currentDate);
+        monday.setDate(currentDate.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+        return monday.toISOString().split('T')[0];  // Format: YYYY-MM-DD
+    }
+    
     
     generateWeeklyDates();
     
@@ -182,26 +191,34 @@
     }
     
     
+    const currentMonday = getFormattedMondayDate();
+    const lastViewedMonday = localStorage.getItem('lastViewedMonday');
 
+    if (lastViewedMonday !== currentMonday) {
+        // New week, reset UI (but keep backend data untouched)
+        localStorage.setItem('lastViewedMonday', currentMonday);
+        console.log("🆕 New week detected. UI schedule cleared.");
+    } else {
+        // Same week, load tasks from backend
+        fetch('task/api/get-tasks/')
+        .then(response => response.json())
+        .then(data => {
 
-    fetch('task/api/get-tasks/')
-    .then(response => response.json())
-    .then(data => {
+            data.weekly_tasks.forEach(task => {
+                const taskTime = task.time; // Already in HH:MM format
+                const dayColumn = document.querySelector(`td[data-day="${task.day.toLowerCase()}"][data-time="${taskTime}"]`);
 
-        data.weekly_tasks.forEach(task => {
-            const taskTime = task.time; // Already in HH:MM format
-            const dayColumn = document.querySelector(`td[data-day="${task.day.toLowerCase()}"][data-time="${taskTime}"]`);
-
-            if (dayColumn) {
-                dayColumn.textContent = task.task;
-                dayColumn.setAttribute('data-task-id', task.id);
-                dayColumn.classList.add('has-task');
-            } else {
-                console.warn(`⚠️ No matching cell found for task: "${task.task}" on ${task.day.toLowerCase()} at ${taskTime}`);
-            }
-        });
-    })
-    .catch(error => console.error("❌ Error fetching tasks:", error));
+                if (dayColumn) {
+                    dayColumn.textContent = task.task;
+                    dayColumn.setAttribute('data-task-id', task.id);
+                    dayColumn.classList.add('has-task');
+                } else {
+                    console.warn(`⚠️ No matching cell found for task: "${task.task}" on ${task.day.toLowerCase()} at ${taskTime}`);
+                }
+            });
+        })
+        .catch(error => console.error("❌ Error fetching tasks:", error));
+    }
     
 </script>
 {% endblock content %}
