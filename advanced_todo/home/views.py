@@ -496,8 +496,8 @@ def delete_task(request):
 @login_required
 def export_weekly_tasks(request, user_id):
 
-    if not request.user.is_staff:
-        return redirect('home:startday')
+    # if not request.user.is_staff:
+    #     return redirect('home:startday')
 
     user = get_object_or_404(Users, id=user_id)
     tasks = WeeklyTask.objects.filter(user=user).order_by('date', 'time')
