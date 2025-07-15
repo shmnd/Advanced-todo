@@ -164,20 +164,20 @@ AUTH_USER_MODEL  = 'authentication.Users'
 CORS_ALLOW_CREDENTIALS = True
 
 
-EMAIL_HOST_USER       = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD   = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = config('EMAIL_HOST_USERS')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORDS')
 
 EMAIL_BACKEND         = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST            = config('EMAIL_HOSTS')
-RECIEVER_EMAIL        = config('RECIEVER_EMAIL')
+EMAIL_HOST            = config('EMAIL_HOST')
+# RECIEVER_EMAIL        = config('RECIEVER_EMAIL')
 
-EMAIL_DOMAIN          = config('EMAIL_DOMAIN')
+# EMAIL_DOMAIN          = config('EMAIL_DOMAIN')
 EMAIL_PORT            = config('EMAIL_PORT')
 
 EMAIL_USE_TLS         = config('EMAIL_USE_TLSS', default=False, cast=bool)
 EMAIL_USE_SSL         = config('EMAIL_USE_SSLS', default=False, cast=bool)
 
-DEFAULT_FROM_EMAIL    = config('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAILS    = config('DEFAULT_FROM_EMAILS')
 
 TIME_ZONE = config('TIME_ZONE',default='Asia/Kolkata')
 USE_TZ = config('USE_TZ',default=True,cast=bool)

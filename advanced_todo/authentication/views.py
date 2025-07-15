@@ -85,7 +85,7 @@ class LoginView(View):
             password    = request.POST.get('password')
             user        = authenticate(email=email, password=password)
                  
-            EMAIL_HOST_USER = str(settings.DEFAULT_FROM_EMAIL)
+            EMAIL_HOST_USER = str(settings.DEFAULT_FROM_EMAILS)
             
             if user is not None:
                 otp = random.randint(100000, 999999)
