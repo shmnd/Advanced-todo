@@ -29,6 +29,9 @@ class UserRegisterView(View):
             username = request.POST.get("username")
             password = request.POST.get("password")
             confirm_password = request.POST.get("confirm_password")
+           
+	   if not email:
+                return JsonResponse({"status_code": 400, "message": "Email is required."}, status=400)
 
             # Check if email exists
             if Users.objects.filter(email=email).exists():
