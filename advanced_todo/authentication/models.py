@@ -19,7 +19,7 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class Users(AbstractBaseUser, PermissionsMixin):
-    email       = models.EmailField(unique=True,blank=True, null=True)
+    email       = models.EmailField(unique=True, null=True, blank=True)
     username    = models.CharField(max_length=150, null=True, blank=True)
     first_name  = models.CharField(max_length=30,blank=True, null=True)
     last_name   = models.CharField(max_length=30,blank=True, null=True)
@@ -37,4 +37,4 @@ class Users(AbstractBaseUser, PermissionsMixin):
 
 
     def __str__(self):
-        return self.email or self.username
+        return self.email or self.username or "unknown"

@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # DEBUG = config('DEBUG', cast=bool)
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
@@ -30,8 +30,11 @@ if not SECRET_KEY:
     warnings.warn("SECRET_KEY not configured, using a random temporary key.")
     SECRET_KEY = get_random_secret_key()
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="localhost",
+    cast=lambda v: [s.strip() for s in v.split(",")]
+)
 
 # Application definition
 
